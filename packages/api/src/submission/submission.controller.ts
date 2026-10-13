@@ -6,6 +6,8 @@ import { createSubmissionSchema, FormSettings, submissionQuerySchema } from './s
 import { getFileUrl } from '../middleware/fileUpload';
 import { checkFormSubmissionRateLimit } from '../middleware/rateLimit';
 import { resolveSpamProtectionSettings } from '../form/spamProtectionDefaults';
+import { AuthRequest } from '../presentation/middleware/auth';
+import { SubmissionNotFoundError } from './submission.errors';
 
 /**
  * Submission controller for handling HTTP requests
@@ -208,6 +210,11 @@ export class SubmissionController {
      */
     async getSubmissionById(req: Request, res: Response): Promise<void> {
         try {
+            const userId = this.requireUserId(req, res);
+            if (!userId) {
+                return;
+            }
+
             const { id } = req.params;
 
             if (!id) {
@@ -218,7 +225,7 @@ export class SubmissionController {
                 return;
             }
 
-            const submission = await this.submissionService.getById(id);
+            const submission = await this.submissionService.getById(id, userId);
 
             if (!submission) {
                 res.status(404).json({
@@ -243,6 +250,9 @@ export class SubmissionController {
                 },
             });
         } catch (error) {
+            if (this.respondIfNotFound(res, error)) {
+                return;
+            }
             res.status(500).json({
                 success: false,
                 message: 'Failed to retrieve submission',
@@ -257,6 +267,11 @@ export class SubmissionController {
      */
     async getFormSubmissions(req: Request, res: Response): Promise<void> {
         try {
+            const userId = this.requireUserId(req, res);
+            if (!userId) {
+                return;
+            }
+
             const { formId } = req.params;
 
             if (!formId) {
@@ -282,7 +297,7 @@ export class SubmissionController {
             }
 
             const { page = 1, limit = 10 } = queryResult.data;
-            const result = await this.submissionService.getByFormId(formId, page, limit);
+            const result = await this.submissionService.getByFormId(formId, userId, page, limit);
 
             res.status(200).json({
                 success: true,
@@ -306,6 +321,9 @@ export class SubmissionController {
                 },
             });
         } catch (error) {
+            if (this.respondIfNotFound(res, error)) {
+                return;
+            }
             res.status(500).json({
                 success: false,
                 message: 'Failed to retrieve form submissions',
@@ -320,13 +338,8 @@ export class SubmissionController {
      */
     async getUserSubmissions(req: Request, res: Response): Promise<void> {
         try {
-            // Get user ID from authenticated request
-            const userId = (req as any).user?.id;
+            const userId = this.requireUserId(req, res);
             if (!userId) {
-                res.status(401).json({
-                    success: false,
-                    message: 'Authentication required',
-                });
                 return;
             }
 
@@ -384,6 +397,11 @@ export class SubmissionController {
      */
     async deleteSubmission(req: Request, res: Response): Promise<void> {
         try {
+            const userId = this.requireUserId(req, res);
+            if (!userId) {
+                return;
+            }
+
             const { id } = req.params;
 
             if (!id) {
@@ -394,7 +412,7 @@ export class SubmissionController {
                 return;
             }
 
-            const deletedSubmission = await this.submissionService.delete(id);
+            const deletedSubmission = await this.submissionService.delete(id, userId);
 
             res.status(200).json({
                 success: true,
@@ -405,6 +423,9 @@ export class SubmissionController {
                 },
             });
         } catch (error) {
+            if (this.respondIfNotFound(res, error)) {
+                return;
+            }
             res.status(500).json({
                 success: false,
                 message: 'Failed to delete submission',
@@ -419,6 +440,11 @@ export class SubmissionController {
      */
     async bulkDeleteSubmissions(req: Request, res: Response): Promise<void> {
         try {
+            const userId = this.requireUserId(req, res);
+            if (!userId) {
+                return;
+            }
+
             const { submissionIds } = req.body;
 
             if (!submissionIds || !Array.isArray(submissionIds) || submissionIds.length === 0) {
@@ -429,7 +455,7 @@ export class SubmissionController {
                 return;
             }
 
-            const deletedCount = await this.submissionService.bulkDelete(submissionIds);
+            const deletedCount = await this.submissionService.bulkDelete(submissionIds, userId);
 
             res.status(200).json({
                 success: true,
@@ -440,6 +466,9 @@ export class SubmissionController {
                 },
             });
         } catch (error) {
+            if (this.respondIfNotFound(res, error)) {
+                return;
+            }
             res.status(500).json({
                 success: false,
                 message: 'Failed to delete submissions',
@@ -454,6 +483,11 @@ export class SubmissionController {
      */
     async markSubmissionsAsSpam(req: Request, res: Response): Promise<void> {
         try {
+            const userId = this.requireUserId(req, res);
+            if (!userId) {
+                return;
+            }
+
             const { submissionIds } = req.body;
 
             if (!submissionIds || !Array.isArray(submissionIds) || submissionIds.length === 0) {
@@ -464,7 +498,7 @@ export class SubmissionController {
                 return;
             }
 
-            const updatedCount = await this.submissionService.markAsSpam(submissionIds);
+            const updatedCount = await this.submissionService.markAsSpam(submissionIds, userId);
 
             res.status(200).json({
                 success: true,
@@ -475,6 +509,9 @@ export class SubmissionController {
                 },
             });
         } catch (error) {
+            if (this.respondIfNotFound(res, error)) {
+                return;
+            }
             res.status(500).json({
                 success: false,
                 message: 'Failed to mark submissions as spam',
@@ -489,22 +526,17 @@ export class SubmissionController {
      */
     async updateSubmission(req: Request, res: Response): Promise<void> {
         try {
+            const userId = this.requireUserId(req, res);
+            if (!userId) {
+                return;
+            }
+
             const { id } = req.params;
 
             if (!id) {
                 res.status(400).json({
                     success: false,
                     message: 'Submission ID is required',
-                });
-                return;
-            }
-
-            // Get user ID from authenticated request
-            const userId = (req as any).user?.id;
-            if (!userId) {
-                res.status(401).json({
-                    success: false,
-                    message: 'Authentication required',
                 });
                 return;
             }
@@ -519,7 +551,7 @@ export class SubmissionController {
                 return;
             }
 
-            const submission = await this.submissionService.update(id, { status });
+            const submission = await this.submissionService.update(id, userId, { status });
 
             res.status(200).json({
                 success: true,
@@ -531,12 +563,44 @@ export class SubmissionController {
                 },
             });
         } catch (error) {
+            if (this.respondIfNotFound(res, error)) {
+                return;
+            }
             res.status(500).json({
                 success: false,
                 message: 'Failed to update submission',
                 error: (error as Error).message,
             });
         }
+    }
+
+    /**
+     * Authenticated user id from JWT middleware. Never taken from the request body.
+     */
+    private requireUserId(req: Request, res: Response): string | null {
+        const userId = (req as AuthRequest).user?.id;
+        if (!userId) {
+            res.status(401).json({
+                success: false,
+                message: 'Authentication required',
+            });
+            return null;
+        }
+        return userId;
+    }
+
+    /**
+     * Cross-tenant and missing resources both return 404.
+     */
+    private respondIfNotFound(res: Response, error: unknown): boolean {
+        if (error instanceof SubmissionNotFoundError) {
+            res.status(404).json({
+                success: false,
+                message: error.message,
+            });
+            return true;
+        }
+        return false;
     }
 
     /**

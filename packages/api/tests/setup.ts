@@ -1,16 +1,27 @@
-import { PrismaClient } from '@prisma/client';
+import { execSync } from 'child_process';
 import { setupTestDatabase, cleanupTestDatabase } from './db-setup';
 
-// Global test setup
-beforeAll(async () => {
-    // Set test environment variables
-    process.env.NODE_ENV = 'test';
-    process.env.DATABASE_URL = process.env.TEST_DATABASE_URL || 'file:./test.db';
-    process.env.JWT_SECRET = 'test-jwt-secret-key-for-testing-only';
-    process.env.EMAIL_PROVIDER = 'console';
-    process.env.APP_URL = 'http://localhost:4000';
+process.env.NODE_ENV = 'test';
+process.env.DATABASE_URL = process.env.TEST_DATABASE_URL || 'file:./test.db';
+process.env.JWT_SECRET = 'test-jwt-secret-key-for-testing-only';
+process.env.EMAIL_PROVIDER = 'console';
+process.env.APP_URL = 'http://localhost:4000';
 
-    // Setup test database
+const testDbEnv = {
+    ...process.env,
+    TEST_DATABASE_URL: process.env.DATABASE_URL,
+};
+
+execSync('pnpm exec prisma generate --schema=prisma/test-schema.prisma', {
+    stdio: 'inherit',
+    env: testDbEnv,
+});
+execSync('pnpm exec prisma db push --schema=prisma/test-schema.prisma --accept-data-loss', {
+    stdio: 'inherit',
+    env: testDbEnv,
+});
+
+beforeAll(async () => {
     await setupTestDatabase();
 });
 

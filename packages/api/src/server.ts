@@ -72,7 +72,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
 
 // Health check route
-app.get('/health', (req: Request, res: Response) => {
+app.get('/health', (_req: Request, res: Response) => {
     res.json({
         status: 'OK',
         timestamp: new Date().toISOString(),
@@ -87,7 +87,7 @@ app.use('/api/forms', createFormRoutes(formController));
 app.use('/api', createSubmissionRoutes(submissionController));
 
 // Root route
-app.get('/', (req: Request, res: Response) => {
+app.get('/', (_req: Request, res: Response) => {
     res.json({
         message: 'Express + TypeScript Authentication API',
         version: '1.0.0',
@@ -102,7 +102,7 @@ app.get('/', (req: Request, res: Response) => {
 });
 
 // Global error handler
-app.use((error: Error, req: Request, res: Response, next: NextFunction) => {
+app.use((error: Error, _req: Request, res: Response, _next: NextFunction) => {
     console.error('Global error handler:', error);
 
     res.status(400).json({
@@ -112,7 +112,7 @@ app.use((error: Error, req: Request, res: Response, next: NextFunction) => {
 });
 
 // 404 handler
-app.use((req: Request, res: Response) => {
+app.use((_req: Request, res: Response) => {
     res.status(404).json({
         success: false,
         error: 'Route not found'

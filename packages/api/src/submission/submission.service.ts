@@ -4,6 +4,7 @@ import { Submission, Form } from '@prisma/client';
 import { CreateSubmissionInput, FormSettings } from './submission.validation';
 import { addEmailJob, addWebhookJob, addAutoReplyEmailJob } from '../queue/queueConfig';
 import { SpamProtectionService, SpamProtectionConfig } from '../services/spamProtectionService';
+import { SubmissionNotFoundError } from './submission.errors';
 
 /**
  * Submission service for business logic operations
@@ -123,82 +124,71 @@ export class SubmissionService {
     }
 
     /**
-     * Get a submission by ID
-     * @param id - The submission ID
-     * @returns Promise<Submission | null> - The submission if found, null otherwise
+     * Get a submission by ID if the authenticated user owns the parent form.
      */
-    async getById(id: string): Promise<Submission | null> {
-        return this.submissionRepo.findById(id);
+    async getById(id: string, ownerUserId: string): Promise<Submission | null> {
+        return this.submissionRepo.findByIdForOwner(id, ownerUserId);
     }
 
     /**
-     * Get submissions for a form
-     * @param formId - The form ID
-     * @param page - Page number (1-based)
-     * @param limit - Number of items per page
-     * @returns Promise<{ submissions: Submission[]; total: number; totalPages: number }> - Paginated results
+     * Get submissions for a form owned by the authenticated user.
+     * Missing and cross-tenant form IDs both look like "not found".
      */
-    async getByFormId(formId: string, page: number = 1, limit: number = 10): Promise<{
+    async getByFormId(formId: string, ownerUserId: string, page: number = 1, limit: number = 10): Promise<{
         submissions: Submission[];
         total: number;
         totalPages: number;
     }> {
+        const form = await this.formRepo.findById(formId);
+        if (!form || form.userId !== ownerUserId) {
+            throw new SubmissionNotFoundError('Form not found');
+        }
+
         return this.submissionRepo.findByFormId(formId, page, limit);
     }
 
     /**
-     * Get submissions for a user
-     * @param userId - The user ID
-     * @param page - Page number (1-based)
-     * @param limit - Number of items per page
-     * @returns Promise<{ submissions: Submission[]; total: number; totalPages: number }> - Paginated results
+     * Get submissions on forms owned by the authenticated user,
+     * including public submissions whose Submission.userId is null.
      */
     async getByUserId(userId: string, page: number = 1, limit: number = 10): Promise<{
         submissions: Submission[];
         total: number;
         totalPages: number;
     }> {
-        return this.submissionRepo.findByUserId(userId, page, limit);
+        return this.submissionRepo.findByFormOwnerId(userId, page, limit);
     }
 
     /**
-     * Update a submission
-     * @param id - The submission ID to update
-     * @param data - Partial submission data to update
-     * @returns Promise<Submission> - The updated submission
+     * Update a submission owned by the authenticated user.
      */
-    async update(id: string, data: Partial<{
+    async update(id: string, ownerUserId: string, data: Partial<{
         status: string;
         payload: any;
     }>): Promise<Submission> {
-        return this.submissionRepo.update(id, data);
+        return this.submissionRepo.updateForOwner(id, ownerUserId, data);
     }
 
     /**
-     * Delete a submission
-     * @param id - The submission ID to delete
-     * @returns Promise<Submission> - The deleted submission
+     * Delete a submission owned by the authenticated user.
      */
-    async delete(id: string): Promise<Submission> {
-        return this.submissionRepo.delete(id);
+    async delete(id: string, ownerUserId: string): Promise<Submission> {
+        return this.submissionRepo.deleteForOwner(id, ownerUserId);
     }
 
     /**
-     * Bulk delete submissions
-     * @param ids - Array of submission IDs to delete
-     * @returns Promise<number> - Number of deleted submissions
+     * Bulk delete submissions owned by the authenticated user.
+     * Mixed-ownership or unknown IDs fail without deleting anything.
      */
-    async bulkDelete(ids: string[]): Promise<number> {
-        return this.submissionRepo.bulkDelete(ids);
+    async bulkDelete(ids: string[], ownerUserId: string): Promise<number> {
+        return this.submissionRepo.bulkDeleteForOwner(ids, ownerUserId);
     }
 
     /**
-     * Mark submissions as spam
-     * @param ids - Array of submission IDs to mark as spam
-     * @returns Promise<number> - Number of updated submissions
+     * Mark submissions as spam if every ID belongs to the authenticated user.
      */
-    async markAsSpam(ids: string[]): Promise<number> {
-        return this.submissionRepo.bulkUpdateStatus(ids, 'spam');
+    async markAsSpam(ids: string[], ownerUserId: string): Promise<number> {
+        return this.submissionRepo.bulkUpdateStatusForOwner(ids, ownerUserId, 'spam');
     }
 
     /**

@@ -15,9 +15,14 @@ model User {
   isEmailVerified          Boolean  @default(false)
   verificationToken        String?
   verificationTokenExpires DateTime?
+  passwordResetToken       String?
+  passwordResetExpires     DateTime?
   createdAt                DateTime @default(now())
   updatedAt                DateTime @updatedAt
-  profile Profile?
+  profile     Profile?
+  forms       Form[]
+  apiKeys     ApiKey[]
+  submissions Submission[]
 }
 
 model Profile {
@@ -29,5 +34,63 @@ model Profile {
   website   String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Form {
+  id           String   @id @default(uuid())
+  userId       String
+  name         String
+  description  String?
+  endpointSlug String   @unique
+  settings     Json
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  submissions Submission[]
+}
+
+model Submission {
+  id        String   @id @default(uuid())
+  formId    String
+  userId    String?
+  payload   Json
+  name      String?
+  email     String?
+  ip        String?
+  userAgent String?
+  status    String   @default("new")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  form        Form         @relation(fields: [formId], references: [id], onDelete: Cascade)
+  user        User?        @relation(fields: [userId], references: [id], onDelete: SetNull)
+  attachments Attachment[]
+}
+
+model Attachment {
+  id           String   @id @default(uuid())
+  submissionId String
+  filePath     String
+  originalName String
+  mime         String
+  size         Int
+  createdAt    DateTime @default(now())
+
+  submission Submission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+}
+
+model ApiKey {
+  id        String    @id @default(uuid())
+  userId    String
+  name      String
+  tokenHash String
+  abilities Json
+  expiresAt DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }

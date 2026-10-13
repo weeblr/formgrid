@@ -1,11 +1,10 @@
 import { execSync } from 'child_process';
-import { PrismaClient } from '@prisma/client';
 
 // Generate Prisma client for test database
 export const setupTestDatabase = async (): Promise<void> => {
     try {
         // Generate Prisma client for test database
-        execSync('npx prisma generate --schema=prisma/test-schema.prisma', {
+        execSync('pnpm exec prisma generate --schema=prisma/test-schema.prisma', {
             stdio: 'inherit',
             env: {
                 ...process.env,
@@ -14,7 +13,7 @@ export const setupTestDatabase = async (): Promise<void> => {
         });
 
         // Push the schema to create the test database
-        execSync('npx prisma db push --schema=prisma/test-schema.prisma', {
+        execSync('pnpm exec prisma db push --schema=prisma/test-schema.prisma --accept-data-loss', {
             stdio: 'inherit',
             env: {
                 ...process.env,
@@ -32,6 +31,7 @@ export const setupTestDatabase = async (): Promise<void> => {
 // Clean up test database
 export const cleanupTestDatabase = async (): Promise<void> => {
     try {
+        const { PrismaClient } = await import('@prisma/client');
         const prisma = new PrismaClient({
             datasources: {
                 db: {
@@ -40,6 +40,10 @@ export const cleanupTestDatabase = async (): Promise<void> => {
             },
         });
 
+        await prisma.attachment.deleteMany();
+        await prisma.submission.deleteMany();
+        await prisma.form.deleteMany();
+        await prisma.apiKey.deleteMany();
         await prisma.profile.deleteMany();
         await prisma.user.deleteMany();
         await prisma.$disconnect();
