@@ -60,8 +60,8 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
-    command: ["pnpm", "run", "start"]
-    working_dir: /app/packages/api
+    command: ["sh", "-c", "pnpm --filter @formgrid/api run build && node packages/api/dist/server.js"]
+    working_dir: /app
 
   # Frontend Service
   frontend:
@@ -103,8 +103,8 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
-    command: ["pnpm", "run", "worker"]
-    working_dir: /app/packages/api
+    command: ["sh", "-c", "pnpm --filter @formgrid/api run build && node packages/api/dist/queueWorker.js"]
+    working_dir: /app
 
 volumes:
   mysql_data:
