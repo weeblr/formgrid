@@ -68,7 +68,6 @@ services:
     build:
       context: ..
       dockerfile: apps/dashboard/Dockerfile
-      target: production
       args:
         - VITE_API_BASE_URL=${FRONTEND_APP_URL}
     container_name: formgrid-frontend
