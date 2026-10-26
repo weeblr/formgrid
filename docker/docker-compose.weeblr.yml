@@ -34,7 +34,6 @@ services:
     build:
       context: ..
       dockerfile: packages/api/Dockerfile
-      target: production
     container_name: formgrid-backend
     restart: unless-stopped
     volumes:
@@ -84,7 +83,6 @@ services:
     build:
       context: ..
       dockerfile: packages/api/Dockerfile
-      target: production
     container_name: formgrid-queue-worker
     restart: unless-stopped
     volumes:
