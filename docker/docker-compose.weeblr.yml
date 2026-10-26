@@ -1,0 +1,119 @@
+services:
+  # MySQL Database
+  db:
+    image: mysql:8.0
+    container_name: formgrid-db
+    restart: unless-stopped
+    environment:
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
+      - MYSQL_DATABASE=${MYSQL_DATABASE}
+      - MYSQL_USER=${MYSQL_USER}
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD}
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ../packages/api/prisma/init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 20s
+      retries: 10
+
+  # Redis for Queue System
+  redis:
+    image: redis:7-alpine
+    container_name: formgrid-redis
+    restart: unless-stopped
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      timeout: 10s
+      retries: 5
+
+  # Backend Service
+  backend:
+    build:
+      context: ..
+      dockerfile: packages/api/Dockerfile
+      target: production
+    container_name: formgrid-backend
+    restart: unless-stopped
+    volumes:
+      - uploads_data:/app/packages/api/uploads  # Local file storage
+    environment:
+      - NODE_ENV=production
+      - PORT=4000
+      - DATABASE_URL=mysql://${MYSQL_USER}:${MYSQL_PASSWORD}@db:3306/${MYSQL_DATABASE}
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_DB=0
+      - JWT_SECRET=${JWT_SECRET}
+      - JWT_EXPIRES_IN=7d
+      - EMAIL_PROVIDER=resend
+      - RESEND_API_KEY=${RESEND_API_KEY}
+      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
+      - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
+      - EMAIL_FROM=${EMAIL_FROM}
+      - APP_URL=${BACKEND_APP_URL}
+      # File Storage Configuration
+      - FILE_STORAGE_TYPE=local  # Options: local, s3, gcs, minio
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    command: ["pnpm", "run", "start"]
+    working_dir: /app/packages/api
+
+  # Frontend Service
+  frontend:
+    build:
+      context: ..
+      dockerfile: apps/dashboard/Dockerfile
+      target: production
+      args:
+        - VITE_API_BASE_URL=${FRONTEND_APP_URL}
+    container_name: formgrid-frontend
+    restart: unless-stopped
+    ports:
+      - "80"
+    environment:
+      - VITE_API_BASE_URL=${FRONTEND_APP_URL}
+    depends_on:
+      - backend
+
+  # Queue Worker Service
+  queue-worker:
+    build:
+      context: ..
+      dockerfile: packages/api/Dockerfile
+      target: production
+    container_name: formgrid-queue-worker
+    restart: unless-stopped
+    volumes:
+      - uploads_data:/app/packages/api/uploads
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=mysql://${MYSQL_USER}:${MYSQL_PASSWORD}@db:3306/${MYSQL_DATABASE}
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_DB=0
+      - EMAIL_PROVIDER=resend
+      - RESEND_API_KEY=${RESEND_API_KEY}
+      - EMAIL_FROM=${EMAIL_FROM}
+      # File Storage Configuration
+      - FILE_STORAGE_TYPE=local
+      - UPLOAD_PATH=/app/uploads
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    command: ["pnpm", "run", "worker"]
+    working_dir: /app/packages/api
+
+volumes:
+  mysql_data:
+  redis_data:
+  uploads_data:  # Local file storage
+  
+  
