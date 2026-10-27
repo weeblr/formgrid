@@ -166,6 +166,8 @@ services:
       - UPLOAD_PATH=/app/uploads
       # Account creation and deletion, off unless set to true
       - ENABLE_ACCOUNTS=${ENABLE_ACCOUNTS:-false}
+      # File uploads on public forms, off unless set to true; any file is then refused with 403
+      - ENABLE_UPLOADS=${ENABLE_UPLOADS:-false}
     depends_on:
       db:
         condition: service_healthy

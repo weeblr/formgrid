@@ -13,6 +13,7 @@ nginx in the `frontend` container serves the dashboard, forwards `/api/` to the 
 
 - `ENABLE_ACCOUNTS` (`true` or `false`, default `false`): account creation and deletion. When `false`, the signup and Settings pages return 403 from nginx, their API endpoints return 403, and their links are hidden. Only signing in is possible.
 
+- `ENABLE_UPLOADS` (`true` or `false`, default `false`): file uploads on public forms. When not `true`, any request containing a file gets a 403 before anything is written; forms posted as `multipart/form-data` without files still work (8 KB per field, 100 fields). The upload code, the uploads volume and the `/uploads/` location stay in place.
 - `JEV_API_URL` (default `https://api.typesafe.ai`) and `JEV_MODEL` (default `jev-latest`): Jev endpoint and model used by spam filtering, read by the queue worker. Optional; the API key is set per form.
 
 ## Database changes
@@ -44,6 +45,7 @@ Files that do not exist upstream, so upstream merges never touch them.
 - Notification and confirmation emails in the form's language, all values escaped. The notification shows submitted data first and replies go to the visitor; the confirmation holds no submitted data and replies go to the form's reply-to address, or `no-reply@` the domain of `EMAIL_FROM`: `packages/api/src/weeblr/emails.ts`
 - Success and error pages after a public submission, in the form's language (`/api/weeblr/submission/success` and `/error`): `packages/api/src/weeblr/submissionPages.ts`
 - Submission settings card (language, timezone, confirmation email and its reply-to address, multiple submissions): `apps/dashboard/src/components/WeeblrSubmissionSettings.tsx`
+- Upload switch (`ENABLE_UPLOADS`) in front of upstream's upload handling, with text-only multipart parsing when off: `packages/api/src/weeblr/uploads.ts`
 - "Save all changes" button repeated at the bottom of each form settings card: `apps/dashboard/src/components/WeeblrSaveAllButton.tsx`
 - Optional per-form spam filtering with Jev (TypeSafe AI): settings and their validation (empty thresholds mean 50 / 90 %), fields excluded from what Jev receives, the Jev call, the score bands, and the queue job that classifies a submission before queueing its emails: `packages/api/src/weeblr/spamFiltering.ts`
 - Spam filtering settings card, and spam and danger scores in the submission details: `apps/dashboard/src/components/WeeblrSpamFiltering.tsx`
@@ -117,6 +119,13 @@ Each change is tagged `[weeblr]` in a comment, so it can be found with a search 
 - Jev spam filtering scores, null when not classified: `packages/api/src/submission/submission.controller.ts:323`
 - Jev spam filtering scores, null when not classified: `packages/api/src/submission/submission.controller.ts:388`
 - Our own success page, in the form's language, instead of a hardcoded localhost URL: `packages/api/src/submission/submission.controller.ts:633`
+
+`packages/api/src/submission/submission.routes.ts`
+
+- Uploads off unless ENABLE_UPLOADS=true; any file part is refused with 403: `packages/api/src/submission/submission.routes.ts:5`
+- Uploads off unless ENABLE_UPLOADS=true: `packages/api/src/submission/submission.routes.ts:31`
+- Uploads off unless ENABLE_UPLOADS=true: `packages/api/src/submission/submission.routes.ts:38`
+- Uploads off unless ENABLE_UPLOADS=true: `packages/api/src/submission/submission.routes.ts:45`
 
 `packages/api/src/submission/submission.service.ts`
 

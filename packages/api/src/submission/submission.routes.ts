@@ -2,7 +2,8 @@ import { Router } from 'express';
 import { SubmissionController } from './submission.controller';
 import { authMiddleware } from '../presentation/middleware/auth';
 import { formSubmissionRateLimit, apiRateLimit } from '../middleware/rateLimit';
-import { handleFileUpload } from '../middleware/fileUpload';
+// [weeblr] Uploads off unless ENABLE_UPLOADS=true; any file part is refused with 403
+import { weeblrHandleFileUpload } from '../weeblr/uploads';
 
 /**
  * Submission routes
@@ -27,21 +28,21 @@ export function createSubmissionRoutes(submissionController?: SubmissionControll
     // Formspree-style URL: /f/:endpointSlug
     router.post('/f/:endpointSlug',
         formSubmissionRateLimit,
-        handleFileUpload,
+        weeblrHandleFileUpload, // [weeblr] Uploads off unless ENABLE_UPLOADS=true
         submitToForm
     );
 
     // API-prefixed Formspree-style URL: /api/f/:endpointSlug
     router.post('/api/f/:endpointSlug',
         formSubmissionRateLimit,
-        handleFileUpload,
+        weeblrHandleFileUpload, // [weeblr] Uploads off unless ENABLE_UPLOADS=true
         submitToForm
     );
 
     // Original API-style URL: /forms/:endpointSlug/submit
     router.post('/forms/:endpointSlug/submit',
         formSubmissionRateLimit,
-        handleFileUpload,
+        weeblrHandleFileUpload, // [weeblr] Uploads off unless ENABLE_UPLOADS=true
         submitToForm
     );
 
