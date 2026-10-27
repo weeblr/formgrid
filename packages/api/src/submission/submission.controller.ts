@@ -152,8 +152,7 @@ export class SubmissionController {
                 userAgent
             );
 
-            // Queue background jobs for notifications
-            await this.queueBackgroundJobs(submission, endpointSlug);
+            // [weeblr] Background jobs are already queued by submissionService.submitToForm; queueing them here too sent every notification and webhook twice
 
             // Use the isHtmlForm variable already declared above
 
