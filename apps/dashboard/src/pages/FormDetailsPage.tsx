@@ -182,7 +182,8 @@ export function FormDetailsPage() {
                             setRedirectUrl(formData.settings.redirectUrl);
                         } else {
                             // Set default redirect URL if none configured
-                            setRedirectUrl('http://localhost:5173/success.html');
+                            // [weeblr] Our own success page instead of a hardcoded localhost URL
+                            setRedirectUrl(`${api.defaults.baseURL}/submission-success.html`);
                         }
 
                         // Initialize spam protection settings from form data
@@ -217,7 +218,8 @@ export function FormDetailsPage() {
     }, [id]);
 
     const generateEndpointUrl = (endpointSlug: string) => {
-        return `http://localhost:4001/api/f/${endpointSlug}`;
+        // [weeblr] Real API URL instead of a hardcoded localhost one
+        return `${api.defaults.baseURL}/api/f/${endpointSlug}`;
     };
 
     const formatSubmissionDate = (dateString: string) => {
@@ -1447,7 +1449,8 @@ form.addEventListener('submit', async (e) => {
                         </label>
                         <input
                             type="url"
-                            placeholder="http://localhost:5173/success.html"
+                            // [weeblr] Our own success page instead of a hardcoded localhost URL
+                            placeholder={`${api.defaults.baseURL}/submission-success.html`}
                             value={redirectUrl}
                             onChange={(e) => {
                                 setRedirectUrl(e.target.value);
@@ -1724,7 +1727,8 @@ form.addEventListener('submit', async (e) => {
                                                                             </div>
                                                                             <div className="flex items-center space-x-2">
                                                                                 <a
-                                                                                    href={`http://localhost:4001/uploads/${file.filename}`}
+                                                                                    // [weeblr] Real uploads URL instead of a hardcoded localhost one
+                                                                                    href={`${api.defaults.baseURL}/uploads/${file.filename}`}
                                                                                     target="_blank"
                                                                                     rel="noopener noreferrer"
                                                                                     className="text-blue-600 hover:text-blue-800 text-sm font-medium"
@@ -1734,7 +1738,8 @@ form.addEventListener('submit', async (e) => {
                                                                                 <button
                                                                                     onClick={() => {
                                                                                         const link = document.createElement('a');
-                                                                                        link.href = `http://localhost:4001/uploads/${file.filename}`;
+                                                                                        // [weeblr] Real uploads URL instead of a hardcoded localhost one
+                                                                                        link.href = `${api.defaults.baseURL}/uploads/${file.filename}`;
                                                                                         link.download = file.originalName || file.filename;
                                                                                         document.body.appendChild(link);
                                                                                         link.click();

@@ -7,6 +7,8 @@ Dokploy deploys the `weeblr` branch with a custom compose file:
 
 It only exists in this fork, so upstream merges never touch it.
 
+nginx in the `frontend` container serves the dashboard, forwards `/api/` to the backend, and serves uploaded files under `/uploads/` straight from the uploads volume (read-only, sandboxed so an uploaded HTML file cannot run as part of the site). The backend's own `/uploads` route reads a different folder and is not used.
+
 ## Settings
 
 - `ENABLE_ACCOUNTS` (`true` or `false`, default `false`): account creation and deletion. When `false`, the signup and Settings pages return 403 from nginx, their API endpoints return 403, and their links are hidden. Only signing in is possible.
@@ -50,5 +52,12 @@ Each change is tagged `[weeblr]` in a comment, so it can be found with a search 
 - Show Settings in the sidebar only when accounts are enabled: `apps/dashboard/src/components/dashboard/DashboardSidebar.tsx:4`
 - Add Settings to the dashboard sidebar: `apps/dashboard/src/components/dashboard/DashboardSidebar.tsx:15`
 - Show Settings in the avatar menu only when accounts are enabled: `apps/dashboard/src/components/dashboard/UserAvatarDropdown.tsx:5`
+- Default success redirect URL is our own success page: `apps/dashboard/src/pages/FormDetailsPage.tsx:185`
+- Show the real form endpoint URL: `apps/dashboard/src/pages/FormDetailsPage.tsx:221`
+- Success redirect URL placeholder is our own success page: `apps/dashboard/src/pages/FormDetailsPage.tsx:1452`
+- View uploaded files from the real uploads URL: `apps/dashboard/src/pages/FormDetailsPage.tsx:1730`
+- Download uploaded files from the real uploads URL: `apps/dashboard/src/pages/FormDetailsPage.tsx:1741`
+- Import the API client for form endpoint URLs: `apps/dashboard/src/pages/FormsPage.tsx:7`
+- Show the real form endpoint URL in the forms list: `apps/dashboard/src/pages/FormsPage.tsx:52`
 - Add the missing `/api` prefix to the profile request (page no longer routed): `apps/dashboard/src/pages/dashboard/ProfilePage.tsx:28`
 - Read the profile from the API's `data` field (page no longer routed): `apps/dashboard/src/pages/dashboard/ProfilePage.tsx:30`

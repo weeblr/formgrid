@@ -4,6 +4,8 @@ import { DashboardLayout } from '../layouts/DashboardLayout';
 import { CreateFormModal } from '../components/dashboard/CreateFormModal';
 import { useForms } from '../hooks/useForms';
 import { useDashboard } from '../hooks/useDashboard';
+// [weeblr] Real API URL for form endpoints
+import api from '../lib/api';
 
 export function FormsPage() {
     const navigate = useNavigate();
@@ -47,7 +49,8 @@ export function FormsPage() {
     };
 
     const generateEndpointUrl = (endpointSlug: string) => {
-        return `http://localhost:4001/api/f/${endpointSlug}`;
+        // [weeblr] Real API URL instead of a hardcoded localhost one
+        return `${api.defaults.baseURL}/api/f/${endpointSlug}`;
     };
 
     return (

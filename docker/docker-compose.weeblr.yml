@@ -88,6 +88,12 @@ x-frontend-build: &frontend-build
             proxy_set_header wbl-origin-auth "";
         }
 
+        location /uploads/ {
+            alias /srv/uploads/;
+            add_header X-Content-Type-Options nosniff always;
+            add_header Content-Security-Policy "sandbox" always;
+        }
+
         location ~ ^/(signup|dashboard/settings)/?$$ {
             if ($$wbl_accounts_enabled = 0) {
                 return 403;
@@ -171,6 +177,9 @@ services:
     build: *frontend-build
     container_name: formgrid-frontend
     restart: unless-stopped
+    volumes:
+      # Served by nginx under /uploads, the backend serves a different folder
+      - uploads_data:/srv/uploads:ro
     environment:
       # Secret header added by a Cloudflare transform rule; requests without it get a 403
       - WBL_ORIGIN_AUTH=${WBL_ORIGIN_AUTH:?WBL_ORIGIN_AUTH must be set}
