@@ -42,7 +42,7 @@ Files that do not exist upstream, so upstream merges never touch them.
 - Honeypot field name setting with the markup to add to the form: `apps/dashboard/src/components/WeeblrHoneypotField.tsx`
 - Form languages: texts for visitors and submission emails, one file per language with the same keys (an empty text falls back to English): `packages/api/src/weeblr/i18n/en.ts`, `packages/api/src/weeblr/i18n/fr.ts`, list of languages in `packages/api/src/weeblr/i18n/index.ts`
 - Per-form language, timezone, confirmation email and confirmation reply-to settings, with their validation and date formatting: `packages/api/src/weeblr/formSettings.ts`
-- Notification and confirmation emails in the form's language, all values escaped. The notification shows submitted data first and replies go to the visitor; the confirmation holds no submitted data and replies go to the form's reply-to address, or `no-reply@` the domain of `EMAIL_FROM`: `packages/api/src/weeblr/emails.ts`
+- Notification and confirmation emails in the form's language, all values escaped. The submitter's email is cleaned (spaces, stray punctuation and wrapping <> or quotes at either end) and kept only if it is then one valid address; otherwise no confirmation is sent and the notification says so. The notification shows submitted data first and replies go to the visitor; the confirmation holds no submitted data and replies go to the form's reply-to address, or `no-reply@` the domain of `EMAIL_FROM`: `packages/api/src/weeblr/emails.ts`
 - Success and error pages after a public submission, in the form's language (`/api/weeblr/submission/success` and `/error`): `packages/api/src/weeblr/submissionPages.ts`
 - Submission settings card (language, timezone, confirmation email and its reply-to address, multiple submissions): `apps/dashboard/src/components/WeeblrSubmissionSettings.tsx`
 - Upload switch (`ENABLE_UPLOADS`) in front of upstream's upload handling, with text-only multipart parsing when off: `packages/api/src/weeblr/uploads.ts`
@@ -130,14 +130,18 @@ Each change is tagged `[weeblr]` in a comment, so it can be found with a search 
 `packages/api/src/submission/submission.service.ts`
 
 - Auto-reply only when turned on for the form: `packages/api/src/submission/submission.service.ts:8`
-- Optional Jev spam filtering: `packages/api/src/submission/submission.service.ts:10`
-- MySQL JSON columns re-sort object keys: jobs get the fields in the order they were submitted: `packages/api/src/submission/submission.service.ts:111`
-- With spam filtering, a classification job queues the notification and confirmation once Jev has answered: `packages/api/src/submission/submission.service.ts:116`
-- Notification gets the fields in submitted order: `packages/api/src/submission/submission.service.ts:121`
-- End of the branch without spam filtering: `packages/api/src/submission/submission.service.ts:128`
-- Webhook gets the fields in submitted order: `packages/api/src/submission/submission.service.ts:132`
-- Allowed unless explicitly turned off: `packages/api/src/submission/submission.service.ts:309`
-- Only when turned on for the form: it emails any address a visitor types in: `packages/api/src/submission/submission.service.ts:349`
+- Submitter email cleaned and validated before use: `packages/api/src/submission/submission.service.ts:10`
+- Optional Jev spam filtering: `packages/api/src/submission/submission.service.ts:12`
+- Only one cleaned, valid address is kept: confirmations and Reply-To use it: `packages/api/src/submission/submission.service.ts:55`
+- Only one cleaned, valid address is kept: confirmations and Reply-To use it: `packages/api/src/submission/submission.service.ts:108`
+- MySQL JSON columns re-sort object keys: jobs get the fields in the order they were submitted: `packages/api/src/submission/submission.service.ts:115`
+- With spam filtering, a classification job queues the notification and confirmation once Jev has answered: `packages/api/src/submission/submission.service.ts:120`
+- Notification gets the fields in submitted order: `packages/api/src/submission/submission.service.ts:125`
+- End of the branch without spam filtering: `packages/api/src/submission/submission.service.ts:132`
+- Webhook gets the fields in submitted order: `packages/api/src/submission/submission.service.ts:136`
+- Allowed unless explicitly turned off: `packages/api/src/submission/submission.service.ts:313`
+- A confirmation only goes to one valid address: `packages/api/src/submission/submission.service.ts:349`
+- Only when turned on for the form: it emails any address a visitor types in: `packages/api/src/submission/submission.service.ts:354`
 
 `packages/api/src/submission/submission.validation.ts`
 

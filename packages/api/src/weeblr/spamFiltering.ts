@@ -2,6 +2,7 @@ import { z } from 'zod';
 import { Job } from 'bull';
 import { prisma } from '../config/prisma';
 import { emailQueue, addEmailJob, addAutoReplyEmailJob } from '../queue/queueConfig';
+import { isValidEmail } from './emails';
 
 // [weeblr] Optional per-form spam filtering with Jev (TypeSafe AI). Each submission gets a spam
 // score and a danger score (phishing, malware). Per score, T1 and T2 thresholds in percent:
@@ -206,7 +207,7 @@ const queueFollowUps = async (submission: any, form: any, verdict: SpamVerdict):
         });
     }
 
-    if (verdict.classified && verdict.band === 'ok' && submission.email && settings.sendAutoReply === true) {
+    if (verdict.classified && verdict.band === 'ok' && isValidEmail(submission.email) && settings.sendAutoReply === true) {
         await addAutoReplyEmailJob({
             submissionId: submission.id,
             formId: form.id,

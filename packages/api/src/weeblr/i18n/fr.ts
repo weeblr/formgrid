@@ -48,4 +48,6 @@ export const fr: Messages = {
     'value.yes': 'Oui',
     'value.no': 'Non',
     'value.not_classified': 'Non classé, le filtre anti-spam n’a pas pu être joint',
+
+    'email.notice.invalid_email': 'L’adresse email saisie n’est pas valide : il n’est pas possible d’y répondre, et aucune confirmation n’y a été envoyée.',
 };

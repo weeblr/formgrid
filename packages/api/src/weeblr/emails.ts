@@ -24,6 +24,21 @@ export const isValidEmail = (value: unknown): value is string =>
     typeof value === 'string' && value.length <= 254 && EMAIL_PATTERN.test(value);
 
 /**
+ * The submitter's email address, cleaned of spaces, stray punctuation and wrapping
+ * <> or quotes at either end. Null unless the result is one valid plain address:
+ * a comma, space or display name left inside makes it invalid.
+ */
+export const normalizeSubmitterEmail = (value: unknown): string | null => {
+    if (typeof value !== 'string') {
+        return null;
+    }
+    const cleaned = value
+        .trim()
+        .replace(/^[\s,;:.<>"']+|[\s,;:.<>"']+$/g, '');
+    return isValidEmail(cleaned) ? cleaned : null;
+};
+
+/**
  * no-reply address on the sending domain, taken from EMAIL_FROM.
  */
 export const getNoReplyAddress = (): string => {
@@ -139,7 +154,12 @@ export const sendNotificationEmail = async (mailer: MailerService, to: string, {
     const fields = data.fields || [];
     const replyTo = isValidEmail(data.submitterEmail) ? data.submitterEmail : '';
     const footer = replyTo ? t(language, 'email.footer.reply_to', { email: replyTo }) : t(language, 'email.footer.automated');
-    const spamLines = spamDetails(language, spam).map(([label, value]) => labelled(language, label, value));
+    const typedEmail = data.formData?.email;
+    const invalidEmailTyped = !replyTo && typeof typedEmail === 'string' && typedEmail.trim() !== '';
+    const spamLines = [
+        ...spamDetails(language, spam).map(([label, value]) => labelled(language, label, value)),
+        ...(invalidEmailTyped ? [t(language, 'email.notice.invalid_email')] : []),
+    ];
 
     const fieldRows = fields
         .map((field) => `<tr><td style="padding: 8px 12px; border-bottom: 1px solid #e5e7eb; font-weight: bold; vertical-align: top; width: 30%;">${escapeHtml(field.label)}</td><td style="padding: 8px 12px; border-bottom: 1px solid #e5e7eb; white-space: pre-wrap;">${escapeHtml(formatValue(field.value, language))}</td></tr>`)
@@ -193,6 +213,10 @@ export const sendNotificationEmail = async (mailer: MailerService, to: string, {
  * Reply-To is the form's confirmation reply-to address, or a no-reply one.
  */
 export const sendAutoReplyEmail = async (mailer: MailerService, to: string, { data, settings, createdAt }: SubmissionEmailInput): Promise<boolean> => {
+    if (!isValidEmail(to)) {
+        console.error('Confirmation not sent: the recipient is not one valid address');
+        return false;
+    }
     const language = getFormLanguage(settings);
     const accent = ACCENTS.confirmation;
     const submittedAt = formatFormDate(createdAt, settings);

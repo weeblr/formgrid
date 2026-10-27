@@ -7,6 +7,8 @@ import { SpamProtectionService, SpamProtectionConfig } from '../services/spamPro
 import { SubmissionNotFoundError } from './submission.errors';
 // [weeblr] Auto-reply only when turned on for the form
 import { isAutoReplyEnabled } from '../weeblr/formSettings';
+// [weeblr] Submitter email cleaned and validated before use
+import { normalizeSubmitterEmail, isValidEmail } from '../weeblr/emails';
 // [weeblr] Optional Jev spam filtering
 import { getSpamFiltering, addClassificationJob } from '../weeblr/spamFiltering';
 
@@ -50,7 +52,8 @@ export class SubmissionService {
             formId: '', // Will be set by controller
             payload: data.formData,
             ...(data.formData.name && { name: data.formData.name }),
-            ...(data.formData.email && { email: data.formData.email }),
+            // [weeblr] Only one cleaned, valid address is kept: confirmations and Reply-To use it
+            ...(normalizeSubmitterEmail(data.formData.email) && { email: normalizeSubmitterEmail(data.formData.email) as string }),
             ip,
             userAgent,
             status: 'new',
@@ -102,7 +105,8 @@ export class SubmissionService {
             formId: form.id,
             payload: data.formData,
             ...(data.formData.name && { name: data.formData.name }),
-            ...(data.formData.email && { email: data.formData.email }),
+            // [weeblr] Only one cleaned, valid address is kept: confirmations and Reply-To use it
+            ...(normalizeSubmitterEmail(data.formData.email) && { email: normalizeSubmitterEmail(data.formData.email) as string }),
             ip,
             userAgent,
             status: 'new',
@@ -342,7 +346,8 @@ export class SubmissionService {
      * @param form - The form
      */
     async queueAutoReplyEmail(submission: Submission, form: Form): Promise<void> {
-        if (!submission.email) {
+        // [weeblr] A confirmation only goes to one valid address
+        if (!isValidEmail(submission.email)) {
             return;
         }
 

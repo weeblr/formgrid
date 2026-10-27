@@ -47,6 +47,8 @@ export const en = {
     'value.yes': 'Yes',
     'value.no': 'No',
     'value.not_classified': 'Not classified, the spam filter could not be reached',
+
+    'email.notice.invalid_email': 'The email address entered is not valid: it cannot be replied to, and no confirmation was sent to it.',
 };
 
 export type MessageKey = keyof typeof en;
