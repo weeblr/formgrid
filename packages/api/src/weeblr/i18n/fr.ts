@@ -40,6 +40,7 @@ export const fr: Messages = {
 
     'email.subject.flag_spam': '[Spam ?]',
     'email.subject.flag_danger': '[Danger ?]',
+    'email.subject.flag_unclassified': '[Non classé]',
 
     'email.footer.automated': 'Ce message a été envoyé automatiquement. Merci de ne pas y répondre.',
     'email.footer.reply_to': 'Répondre à cet email enverra un message à l’adresse {email}.',

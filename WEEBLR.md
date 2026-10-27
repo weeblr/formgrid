@@ -45,6 +45,8 @@ Files that do not exist upstream, so upstream merges never touch them.
 - Notification and confirmation emails in the form's language, all values escaped. The submitter's email is cleaned (spaces, stray punctuation and wrapping <> or quotes at either end) and kept only if it is then one valid address; otherwise no confirmation is sent and the notification says so. The notification shows submitted data first and replies go to the visitor; the confirmation holds no submitted data and replies go to the form's reply-to address, or `no-reply@` the domain of `EMAIL_FROM`: `packages/api/src/weeblr/emails.ts`
 - Success and error pages after a public submission, in the form's language (`/api/weeblr/submission/success` and `/error`): `packages/api/src/weeblr/submissionPages.ts`
 - Submission settings card (language, timezone, confirmation email and its reply-to address, multiple submissions): `apps/dashboard/src/components/WeeblrSubmissionSettings.tsx`
+- Submitted values reduced to plain text (nested objects flattened as `address.city`, odd shapes stored as JSON text), 8 KB per value, 100 fields, 200 characters per field name; over the limits a submission gets a 413: `packages/api/src/weeblr/payload.ts`
+- Error boundary around the submissions tab: `apps/dashboard/src/components/WeeblrErrorBoundary.tsx`
 - Upload switch (`ENABLE_UPLOADS`) in front of upstream's upload handling, with text-only multipart parsing when off: `packages/api/src/weeblr/uploads.ts`
 - "Save all changes" button repeated at the bottom of each form settings card: `apps/dashboard/src/components/WeeblrSaveAllButton.tsx`
 - Optional per-form spam filtering with Jev (TypeSafe AI): settings and their validation (empty thresholds mean 50 / 90 %), fields excluded from what Jev receives, the Jev call, the score bands, and the queue job that classifies a submission before queueing its emails: `packages/api/src/weeblr/spamFiltering.ts`
@@ -112,13 +114,18 @@ Each change is tagged `[weeblr]` in a comment, so it can be found with a search 
 
 - Our own success and error pages, in the form's language: `packages/api/src/submission/submission.controller.ts:11`
 - Honeypot with a per-form field name: `packages/api/src/submission/submission.controller.ts:13`
-- Honeypot: the field is never stored; caught bots get the same silent success as rate limiting: `packages/api/src/submission/submission.controller.ts:69`
-- Background jobs are already queued by submissionService.submitToForm; queueing them here too sent every notification and webhook twice: `packages/api/src/submission/submission.controller.ts:155`
-- Our own success page, in the form's language, instead of a hardcoded localhost URL: `packages/api/src/submission/submission.controller.ts:165`
-- Our own error page, in the form's language, instead of a hardcoded localhost URL: `packages/api/src/submission/submission.controller.ts:187`
-- Jev spam filtering scores, null when not classified: `packages/api/src/submission/submission.controller.ts:323`
-- Jev spam filtering scores, null when not classified: `packages/api/src/submission/submission.controller.ts:388`
-- Our own success page, in the form's language, instead of a hardcoded localhost URL: `packages/api/src/submission/submission.controller.ts:633`
+- Submitted values stored as plain text, with size limits: `packages/api/src/submission/submission.controller.ts:15`
+- Honeypot: the field is never stored; caught bots get the same silent success as rate limiting: `packages/api/src/submission/submission.controller.ts:71`
+- No body must not throw: `packages/api/src/submission/submission.controller.ts:84`
+- Plain text values only (nested objects flattened), 8 KB per value, 100 fields; real uploads are added after: `packages/api/src/submission/submission.controller.ts:110`
+- Plain text values only (nested objects flattened), 8 KB per value, 100 fields: `packages/api/src/submission/submission.controller.ts:153`
+- Cut to the column size: some in-app browsers send longer User-Agents, which made the submission fail: `packages/api/src/submission/submission.controller.ts:164`
+- Background jobs are already queued by submissionService.submitToForm; queueing them here too sent every notification and webhook twice: `packages/api/src/submission/submission.controller.ts:173`
+- Our own success page, in the form's language, instead of a hardcoded localhost URL: `packages/api/src/submission/submission.controller.ts:183`
+- Our own error page, in the form's language, instead of a hardcoded localhost URL: `packages/api/src/submission/submission.controller.ts:205`
+- Jev spam filtering scores, null when not classified: `packages/api/src/submission/submission.controller.ts:341`
+- Jev spam filtering scores, null when not classified: `packages/api/src/submission/submission.controller.ts:406`
+- Our own success page, in the form's language, instead of a hardcoded localhost URL: `packages/api/src/submission/submission.controller.ts:651`
 
 `packages/api/src/submission/submission.routes.ts`
 
@@ -132,16 +139,18 @@ Each change is tagged `[weeblr]` in a comment, so it can be found with a search 
 - Auto-reply only when turned on for the form: `packages/api/src/submission/submission.service.ts:8`
 - Submitter email cleaned and validated before use: `packages/api/src/submission/submission.service.ts:10`
 - Optional Jev spam filtering: `packages/api/src/submission/submission.service.ts:12`
-- Only one cleaned, valid address is kept: confirmations and Reply-To use it: `packages/api/src/submission/submission.service.ts:55`
-- Only one cleaned, valid address is kept: confirmations and Reply-To use it: `packages/api/src/submission/submission.service.ts:108`
-- MySQL JSON columns re-sort object keys: jobs get the fields in the order they were submitted: `packages/api/src/submission/submission.service.ts:115`
-- With spam filtering, a classification job queues the notification and confirmation once Jev has answered: `packages/api/src/submission/submission.service.ts:120`
-- Notification gets the fields in submitted order: `packages/api/src/submission/submission.service.ts:125`
-- End of the branch without spam filtering: `packages/api/src/submission/submission.service.ts:132`
-- Webhook gets the fields in submitted order: `packages/api/src/submission/submission.service.ts:136`
-- Allowed unless explicitly turned off: `packages/api/src/submission/submission.service.ts:313`
-- A confirmation only goes to one valid address: `packages/api/src/submission/submission.service.ts:349`
-- Only when turned on for the form: it emails any address a visitor types in: `packages/api/src/submission/submission.service.ts:354`
+- As text, cut to the column size: `packages/api/src/submission/submission.service.ts:54`
+- Only one cleaned, valid address is kept: confirmations and Reply-To use it: `packages/api/src/submission/submission.service.ts:56`
+- As text, cut to the column size: `packages/api/src/submission/submission.service.ts:108`
+- Only one cleaned, valid address is kept: confirmations and Reply-To use it: `packages/api/src/submission/submission.service.ts:110`
+- MySQL JSON columns re-sort object keys: jobs get the fields in the order they were submitted: `packages/api/src/submission/submission.service.ts:117`
+- With spam filtering, a classification job queues the notification and confirmation once Jev has answered: `packages/api/src/submission/submission.service.ts:122`
+- Notification gets the fields in submitted order: `packages/api/src/submission/submission.service.ts:127`
+- End of the branch without spam filtering: `packages/api/src/submission/submission.service.ts:134`
+- Webhook gets the fields in submitted order: `packages/api/src/submission/submission.service.ts:138`
+- Allowed unless explicitly turned off: `packages/api/src/submission/submission.service.ts:315`
+- A confirmation only goes to one valid address: `packages/api/src/submission/submission.service.ts:351`
+- Only when turned on for the form: it emails any address a visitor types in: `packages/api/src/submission/submission.service.ts:356`
 
 `packages/api/src/submission/submission.validation.ts`
 
@@ -180,55 +189,58 @@ Each change is tagged `[weeblr]` in a comment, so it can be found with a search 
 - Per-form honeypot field name: `apps/dashboard/src/pages/FormDetailsPage.tsx:8`
 - Per-form submission settings: multiple submissions, language, timezone, confirmation email: `apps/dashboard/src/pages/FormDetailsPage.tsx:10`
 - Save all changes button at the bottom of each settings card: `apps/dashboard/src/pages/FormDetailsPage.tsx:12`
-- Real submission dates in the viewer's locale and timezone: `apps/dashboard/src/pages/FormDetailsPage.tsx:14`
-- Jev spam filtering settings and submission scores: `apps/dashboard/src/pages/FormDetailsPage.tsx:16`
-- Per-form honeypot field name: `apps/dashboard/src/pages/FormDetailsPage.tsx:42`
-- Open a given tab with ?tab=, used by the Edit icon of the forms list: `apps/dashboard/src/pages/FormDetailsPage.tsx:77`
-- Per-form submission settings: multiple submissions, language, timezone, confirmation email: `apps/dashboard/src/pages/FormDetailsPage.tsx:93`
-- Pending value of Enable Notifications; upstream changed the saved form instead, so it could never be saved: `apps/dashboard/src/pages/FormDetailsPage.tsx:95`
-- Jev spam filtering settings: `apps/dashboard/src/pages/FormDetailsPage.tsx:97`
-- Per-form honeypot field name, empty means the default: `apps/dashboard/src/pages/FormDetailsPage.tsx:111`
-- Per-form submission settings: `apps/dashboard/src/pages/FormDetailsPage.tsx:144`
-- Detect Enable Notifications changes: `apps/dashboard/src/pages/FormDetailsPage.tsx:146`
-- Detect spam filtering changes: `apps/dashboard/src/pages/FormDetailsPage.tsx:148`
-- Per-form honeypot field name: `apps/dashboard/src/pages/FormDetailsPage.tsx:153`
-- Re-check changes for the fork's settings, Enable Notifications and spam filtering: `apps/dashboard/src/pages/FormDetailsPage.tsx:161`
-- Multiple submissions allowed by default: `apps/dashboard/src/pages/FormDetailsPage.tsx:189`
-- Per-form submission settings: `apps/dashboard/src/pages/FormDetailsPage.tsx:210`
-- Load Enable Notifications: `apps/dashboard/src/pages/FormDetailsPage.tsx:212`
-- Load spam filtering settings: `apps/dashboard/src/pages/FormDetailsPage.tsx:214`
-- A URL of the built-in page is shown as empty: the page now follows the form's language: `apps/dashboard/src/pages/FormDetailsPage.tsx:218`
-- Empty: the built-in page in the form's language is used: `apps/dashboard/src/pages/FormDetailsPage.tsx:223`
-- Older forms have no honeypot field name: `apps/dashboard/src/pages/FormDetailsPage.tsx:232`
-- Per-form honeypot field name, empty means the default: `apps/dashboard/src/pages/FormDetailsPage.tsx:241`
-- Real API URL instead of a hardcoded localhost one: `apps/dashboard/src/pages/FormDetailsPage.tsx:262`
-- Real date and time instead of "Just now" / "N hours ago", which only counted whole hours: `apps/dashboard/src/pages/FormDetailsPage.tsx:267`
-- Submissions held by spam filtering: `apps/dashboard/src/pages/FormDetailsPage.tsx:279`
-- Show what is wrong with the spam filtering settings instead of a generic save error: `apps/dashboard/src/pages/FormDetailsPage.tsx:429`
-- Save Enable Notifications: `apps/dashboard/src/pages/FormDetailsPage.tsx:447`
-- Save spam filtering settings: `apps/dashboard/src/pages/FormDetailsPage.tsx:449`
-- Per-form submission settings: `apps/dashboard/src/pages/FormDetailsPage.tsx:452`
-- An empty honeypot field name is not saved, the default applies: `apps/dashboard/src/pages/FormDetailsPage.tsx:456`
-- Keep the saved settings, otherwise the page still sees unsaved changes after saving: `apps/dashboard/src/pages/FormDetailsPage.tsx:470`
-- Time elapsed since the submission, on hover: `apps/dashboard/src/pages/FormDetailsPage.tsx:1136`
-- Every save button saves the whole page: `apps/dashboard/src/pages/FormDetailsPage.tsx:1365`
-- Pending value, saved with Save Changes like the other settings: `apps/dashboard/src/pages/FormDetailsPage.tsx:1435`
-- Save all changes from this card too: `apps/dashboard/src/pages/FormDetailsPage.tsx:1483`
-- Per-form submission settings: multiple submissions, language, timezone, confirmation email: `apps/dashboard/src/pages/FormDetailsPage.tsx:1487`
-- Save all changes from this card too: `apps/dashboard/src/pages/FormDetailsPage.tsx:1489`
-- Empty means the built-in page in the form's language: `apps/dashboard/src/pages/FormDetailsPage.tsx:1503`
-- Save all changes from this card too: `apps/dashboard/src/pages/FormDetailsPage.tsx:1517`
-- Hidden: needs a reCAPTCHA key this instance does not set, and upstream drops the token before checking it: `apps/dashboard/src/pages/FormDetailsPage.tsx:1526`
-- Hidden: this field is never saved nor used: `apps/dashboard/src/pages/FormDetailsPage.tsx:1558`
-- Per-form honeypot field name: `apps/dashboard/src/pages/FormDetailsPage.tsx:1593`
-- CAPTCHA toggle is hidden: `apps/dashboard/src/pages/FormDetailsPage.tsx:1631`
-- CORS field is hidden: `apps/dashboard/src/pages/FormDetailsPage.tsx:1634`
-- Save all changes from this card too: `apps/dashboard/src/pages/FormDetailsPage.tsx:1642`
-- Jev spam filtering: `apps/dashboard/src/pages/FormDetailsPage.tsx:1646`
-- Full date and time with seconds: `apps/dashboard/src/pages/FormDetailsPage.tsx:1761`
-- Spam and danger scores, when the submission was classified: `apps/dashboard/src/pages/FormDetailsPage.tsx:1766`
-- Real uploads URL instead of a hardcoded localhost one: `apps/dashboard/src/pages/FormDetailsPage.tsx:1810`
-- Real uploads URL instead of a hardcoded localhost one: `apps/dashboard/src/pages/FormDetailsPage.tsx:1821`
+- Error boundary around the submissions tab: `apps/dashboard/src/pages/FormDetailsPage.tsx:14`
+- Real submission dates in the viewer's locale and timezone: `apps/dashboard/src/pages/FormDetailsPage.tsx:16`
+- Jev spam filtering settings and submission scores: `apps/dashboard/src/pages/FormDetailsPage.tsx:18`
+- Per-form honeypot field name: `apps/dashboard/src/pages/FormDetailsPage.tsx:44`
+- Open a given tab with ?tab=, used by the Edit icon of the forms list: `apps/dashboard/src/pages/FormDetailsPage.tsx:79`
+- Per-form submission settings: multiple submissions, language, timezone, confirmation email: `apps/dashboard/src/pages/FormDetailsPage.tsx:95`
+- Pending value of Enable Notifications; upstream changed the saved form instead, so it could never be saved: `apps/dashboard/src/pages/FormDetailsPage.tsx:97`
+- Jev spam filtering settings: `apps/dashboard/src/pages/FormDetailsPage.tsx:99`
+- Per-form honeypot field name, empty means the default: `apps/dashboard/src/pages/FormDetailsPage.tsx:113`
+- Per-form submission settings: `apps/dashboard/src/pages/FormDetailsPage.tsx:146`
+- Detect Enable Notifications changes: `apps/dashboard/src/pages/FormDetailsPage.tsx:148`
+- Detect spam filtering changes: `apps/dashboard/src/pages/FormDetailsPage.tsx:150`
+- Per-form honeypot field name: `apps/dashboard/src/pages/FormDetailsPage.tsx:155`
+- Re-check changes for the fork's settings, Enable Notifications and spam filtering: `apps/dashboard/src/pages/FormDetailsPage.tsx:163`
+- Multiple submissions allowed by default: `apps/dashboard/src/pages/FormDetailsPage.tsx:191`
+- Per-form submission settings: `apps/dashboard/src/pages/FormDetailsPage.tsx:212`
+- Load Enable Notifications: `apps/dashboard/src/pages/FormDetailsPage.tsx:214`
+- Load spam filtering settings: `apps/dashboard/src/pages/FormDetailsPage.tsx:216`
+- A URL of the built-in page is shown as empty: the page now follows the form's language: `apps/dashboard/src/pages/FormDetailsPage.tsx:220`
+- Empty: the built-in page in the form's language is used: `apps/dashboard/src/pages/FormDetailsPage.tsx:225`
+- Older forms have no honeypot field name: `apps/dashboard/src/pages/FormDetailsPage.tsx:234`
+- Per-form honeypot field name, empty means the default: `apps/dashboard/src/pages/FormDetailsPage.tsx:243`
+- Real API URL instead of a hardcoded localhost one: `apps/dashboard/src/pages/FormDetailsPage.tsx:264`
+- Real date and time instead of "Just now" / "N hours ago", which only counted whole hours: `apps/dashboard/src/pages/FormDetailsPage.tsx:269`
+- Submissions held by spam filtering: `apps/dashboard/src/pages/FormDetailsPage.tsx:281`
+- Show what is wrong with the spam filtering settings instead of a generic save error: `apps/dashboard/src/pages/FormDetailsPage.tsx:431`
+- Save Enable Notifications: `apps/dashboard/src/pages/FormDetailsPage.tsx:449`
+- Save spam filtering settings: `apps/dashboard/src/pages/FormDetailsPage.tsx:451`
+- Per-form submission settings: `apps/dashboard/src/pages/FormDetailsPage.tsx:454`
+- An empty honeypot field name is not saved, the default applies: `apps/dashboard/src/pages/FormDetailsPage.tsx:458`
+- Keep the saved settings, otherwise the page still sees unsaved changes after saving: `apps/dashboard/src/pages/FormDetailsPage.tsx:472`
+- Anything but text or a number is shown as JSON: React cannot render objects: `apps/dashboard/src/pages/FormDetailsPage.tsx:929`
+- Time elapsed since the submission, on hover: `apps/dashboard/src/pages/FormDetailsPage.tsx:1139`
+- Every save button saves the whole page: `apps/dashboard/src/pages/FormDetailsPage.tsx:1368`
+- Pending value, saved with Save Changes like the other settings: `apps/dashboard/src/pages/FormDetailsPage.tsx:1438`
+- Save all changes from this card too: `apps/dashboard/src/pages/FormDetailsPage.tsx:1486`
+- Per-form submission settings: multiple submissions, language, timezone, confirmation email: `apps/dashboard/src/pages/FormDetailsPage.tsx:1490`
+- Save all changes from this card too: `apps/dashboard/src/pages/FormDetailsPage.tsx:1492`
+- Empty means the built-in page in the form's language: `apps/dashboard/src/pages/FormDetailsPage.tsx:1506`
+- Save all changes from this card too: `apps/dashboard/src/pages/FormDetailsPage.tsx:1520`
+- Hidden: needs a reCAPTCHA key this instance does not set, and upstream drops the token before checking it: `apps/dashboard/src/pages/FormDetailsPage.tsx:1529`
+- Hidden: this field is never saved nor used: `apps/dashboard/src/pages/FormDetailsPage.tsx:1561`
+- Per-form honeypot field name: `apps/dashboard/src/pages/FormDetailsPage.tsx:1596`
+- CAPTCHA toggle is hidden: `apps/dashboard/src/pages/FormDetailsPage.tsx:1634`
+- CORS field is hidden: `apps/dashboard/src/pages/FormDetailsPage.tsx:1637`
+- Save all changes from this card too: `apps/dashboard/src/pages/FormDetailsPage.tsx:1645`
+- Jev spam filtering: `apps/dashboard/src/pages/FormDetailsPage.tsx:1649`
+- A bad submission must not blank the whole page: `apps/dashboard/src/pages/FormDetailsPage.tsx:1664`
+- Full date and time with seconds: `apps/dashboard/src/pages/FormDetailsPage.tsx:1765`
+- Spam and danger scores, when the submission was classified: `apps/dashboard/src/pages/FormDetailsPage.tsx:1770`
+- Real uploads URL instead of a hardcoded localhost one: `apps/dashboard/src/pages/FormDetailsPage.tsx:1814`
+- Real uploads URL instead of a hardcoded localhost one: `apps/dashboard/src/pages/FormDetailsPage.tsx:1825`
 
 `apps/dashboard/src/pages/FormsPage.tsx`
 

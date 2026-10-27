@@ -1,6 +1,7 @@
 import { MailerService, EmailTemplateData } from '../services/mailerService';
 import { env } from '../config/env';
 import { t, getLocale } from './i18n';
+import { toText } from './payload';
 import { formatFormDate, getConfirmationReplyTo, getFormLanguage } from './formSettings';
 import type { SpamVerdict } from './spamFiltering';
 
@@ -64,13 +65,10 @@ const formatValue = (value: unknown, language: string): string => {
     }
     if (Array.isArray(value)) {
         return value
-            .map((item) => (item && typeof item === 'object' && 'originalName' in item ? String((item as { originalName: unknown }).originalName) : formatValue(item, language)))
+            .map((item) => (item && typeof item === 'object' && 'originalName' in item ? toText((item as { originalName: unknown }).originalName) : formatValue(item, language)))
             .join(', ');
     }
-    if (typeof value === 'object') {
-        return JSON.stringify(value);
-    }
-    return String(value);
+    return toText(value);
 };
 
 const layout = (language: string, accent: Accent, heading: string, body: string, footer: string): string => `<!DOCTYPE html>
@@ -130,9 +128,12 @@ const spamDetails = (language: string, spam: SpamVerdict | undefined): Array<[st
 };
 
 /**
- * Subject flags for a suspicious submission, such as "[Spam?] [Danger?] ".
+ * Subject flags for a suspicious or unclassified submission, such as "[Spam?] [Danger?] ".
  */
 const subjectFlags = (language: string, spam: SpamVerdict | undefined): string => {
+    if (spam && !spam.classified) {
+        return `${t(language, 'email.subject.flag_unclassified')} `;
+    }
     if (!spam?.classified || spam.band !== 'suspicious') {
         return '';
     }

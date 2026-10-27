@@ -3,6 +3,7 @@ import { Job } from 'bull';
 import { prisma } from '../config/prisma';
 import { emailQueue, addEmailJob, addAutoReplyEmailJob } from '../queue/queueConfig';
 import { isValidEmail } from './emails';
+import { toText } from './payload';
 
 // [weeblr] Optional per-form spam filtering with Jev (TypeSafe AI). Each submission gets a spam
 // score and a danger score (phishing, malware). Per score, T1 and T2 thresholds in percent:
@@ -134,11 +135,11 @@ export const describeSubmission = (formName: string, payload: unknown, excludedF
         }
         let text: string;
         if (Array.isArray(value)) {
-            text = value.map((item) => (item && typeof item === 'object' && 'originalName' in item ? `[file: ${String((item as { originalName: unknown }).originalName)}]` : String(item))).join(', ');
+            text = value.map((item) => (item && typeof item === 'object' && 'originalName' in item ? `[file: ${toText((item as { originalName: unknown }).originalName)}]` : toText(item))).join(', ');
         } else if (value && typeof value === 'object') {
-            text = JSON.stringify(value);
+            text = toText(value);
         } else {
-            text = String(value ?? '');
+            text = toText(value);
         }
         lines.push(`${field}: ${text}`);
     }

@@ -12,6 +12,8 @@ import { SubmissionNotFoundError } from './submission.errors';
 import { getSuccessRedirectUrl, getErrorRedirectUrl } from '../weeblr/submissionPages';
 // [weeblr] Honeypot with a per-form field name
 import { getHoneypotField, takeHoneypot } from '../weeblr/honeypot';
+// [weeblr] Submitted values stored as plain text, with size limits
+import { sanitizeSubmissionPayload } from '../weeblr/payload';
 
 /**
  * Submission controller for handling HTTP requests
@@ -79,7 +81,7 @@ export class SubmissionController {
             const contentType = req.get('Content-Type') || '';
             const isHtmlForm = contentType.includes('application/x-www-form-urlencoded') ||
                 contentType.includes('multipart/form-data') ||
-                (!contentType.includes('application/json') && Object.keys(req.body).length > 0);
+                (!contentType.includes('application/json') && Object.keys(req.body ?? {}).length > 0); // [weeblr] No body must not throw
 
             if (isHtmlForm) {
                 // For HTML forms, store ALL fields dynamically in formData
@@ -105,8 +107,15 @@ export class SubmissionController {
                     });
                 }
 
+                // [weeblr] Plain text values only (nested objects flattened), 8 KB per value, 100 fields; real uploads are added after
+                const cleanedFields = sanitizeSubmissionPayload(allFormFields);
+                if (!cleanedFields) {
+                    res.sendStatus(413);
+                    return;
+                }
+
                 submissionData = {
-                    formData: { ...allFormFields, ...fileData }, // Store ALL fields and files dynamically
+                    formData: { ...cleanedFields, ...fileData }, // Store ALL fields and files dynamically
                     honeypot,
                     'g-recaptcha-response': recaptchaResponse
                 };
@@ -140,11 +149,20 @@ export class SubmissionController {
                     return;
                 }
                 submissionData = validationResult.data;
+
+                // [weeblr] Plain text values only (nested objects flattened), 8 KB per value, 100 fields
+                const cleanedFields = sanitizeSubmissionPayload(submissionData.formData);
+                if (!cleanedFields) {
+                    res.sendStatus(413);
+                    return;
+                }
+                submissionData = { ...submissionData, formData: cleanedFields };
             }
 
             // Get client IP and User-Agent
             const ip = clientIp;
-            const userAgent = req.get('User-Agent') || 'unknown';
+            // [weeblr] Cut to the column size: some in-app browsers send longer User-Agents, which made the submission fail
+            const userAgent = (req.get('User-Agent') || 'unknown').slice(0, 191);
             const submission = await this.submissionService.submitToForm(
                 endpointSlug,
                 submissionData,

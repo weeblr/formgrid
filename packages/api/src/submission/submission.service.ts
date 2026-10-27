@@ -51,7 +51,8 @@ export class SubmissionService {
         const submission = await this.submissionRepo.create({
             formId: '', // Will be set by controller
             payload: data.formData,
-            ...(data.formData.name && { name: data.formData.name }),
+            // [weeblr] As text, cut to the column size
+            ...(data.formData.name && { name: String(data.formData.name).slice(0, 191) }),
             // [weeblr] Only one cleaned, valid address is kept: confirmations and Reply-To use it
             ...(normalizeSubmitterEmail(data.formData.email) && { email: normalizeSubmitterEmail(data.formData.email) as string }),
             ip,
@@ -104,7 +105,8 @@ export class SubmissionService {
         const submission = await this.submissionRepo.create({
             formId: form.id,
             payload: data.formData,
-            ...(data.formData.name && { name: data.formData.name }),
+            // [weeblr] As text, cut to the column size
+            ...(data.formData.name && { name: String(data.formData.name).slice(0, 191) }),
             // [weeblr] Only one cleaned, valid address is kept: confirmations and Reply-To use it
             ...(normalizeSubmitterEmail(data.formData.email) && { email: normalizeSubmitterEmail(data.formData.email) as string }),
             ip,

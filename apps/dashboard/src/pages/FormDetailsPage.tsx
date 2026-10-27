@@ -11,6 +11,8 @@ import { WeeblrHoneypotField } from '../components/WeeblrHoneypotField';
 import { WeeblrSubmissionSettings, readWeeblrSubmissionSettings, weeblrSubmissionSettingsChanged, isBuiltInSuccessUrl } from '../components/WeeblrSubmissionSettings';
 // [weeblr] Save all changes button at the bottom of each settings card
 import { WeeblrSaveAllButton } from '../components/WeeblrSaveAllButton';
+// [weeblr] Error boundary around the submissions tab
+import { WeeblrErrorBoundary } from '../components/WeeblrErrorBoundary';
 // [weeblr] Real submission dates in the viewer's locale and timezone
 import { weeblrDateTime, weeblrDateTimeFull, weeblrRelativeTime } from '../lib/weeblrDates';
 // [weeblr] Jev spam filtering settings and submission scores
@@ -924,7 +926,8 @@ form.addEventListener('submit', async (e) => {
                 return value.substring(0, 50) + '...';
             }
 
-            return value;
+            // [weeblr] Anything but text or a number is shown as JSON: React cannot render objects
+            return typeof value === 'string' || typeof value === 'number' ? value : JSON.stringify(value);
         }
 
         return 'N/A';
@@ -1658,7 +1661,8 @@ form.addEventListener('submit', async (e) => {
             case 'overview':
                 return renderOverviewTab();
             case 'submissions':
-                return renderSubmissionsTab();
+                // [weeblr] A bad submission must not blank the whole page
+                return <WeeblrErrorBoundary>{renderSubmissionsTab()}</WeeblrErrorBoundary>;
             case 'settings':
                 return renderSettingsTab();
             default:

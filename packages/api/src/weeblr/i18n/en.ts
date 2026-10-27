@@ -39,6 +39,7 @@ export const en = {
 
     'email.subject.flag_spam': '[Spam?]',
     'email.subject.flag_danger': '[Danger?]',
+    'email.subject.flag_unclassified': '[Unclassified]',
 
     'email.footer.automated': 'This is an automated message. Please do not reply to this email.',
     'email.footer.reply_to': 'Replying to this email will send a message to {email}.',
