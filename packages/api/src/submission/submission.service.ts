@@ -106,10 +106,13 @@ export class SubmissionService {
             status: 'new',
         });
 
+        // [weeblr] MySQL JSON columns re-sort object keys: jobs get the fields in the order they were submitted
+        const submissionInFieldOrder = { ...submission, payload: data.formData as Submission['payload'] };
+
         // Queue email notification if enabled
         const settings = form.settings as FormSettings;
         if (settings?.requireEmailNotification && settings?.notificationEmail) {
-            await this.queueEmailNotification(submission, form);
+            await this.queueEmailNotification(submissionInFieldOrder, form); // [weeblr] Notification gets the fields in submitted order
         }
 
         // Queue auto-reply email if submitter provided email
@@ -119,7 +122,7 @@ export class SubmissionService {
 
         // Queue webhook if configured
         if (settings?.webhookUrl) {
-            await this.queueWebhook(submission, form);
+            await this.queueWebhook(submissionInFieldOrder, form); // [weeblr] Webhook gets the fields in submitted order
         }
 
         return submission;

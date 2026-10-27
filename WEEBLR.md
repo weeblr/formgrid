@@ -83,8 +83,11 @@ Each change is tagged `[weeblr]` in a comment, so it can be found with a search 
 `packages/api/src/submission/submission.service.ts`
 
 - Auto-reply only when turned on for the form: `packages/api/src/submission/submission.service.ts:8`
-- Allowed unless explicitly turned off: `packages/api/src/submission/submission.service.ts:299`
-- Only when turned on for the form: it emails any address a visitor types in: `packages/api/src/submission/submission.service.ts:339`
+- MySQL JSON columns re-sort object keys: jobs get the fields in the order they were submitted: `packages/api/src/submission/submission.service.ts:109`
+- Notification gets the fields in submitted order: `packages/api/src/submission/submission.service.ts:115`
+- Webhook gets the fields in submitted order: `packages/api/src/submission/submission.service.ts:125`
+- Allowed unless explicitly turned off: `packages/api/src/submission/submission.service.ts:302`
+- Only when turned on for the form: it emails any address a visitor types in: `packages/api/src/submission/submission.service.ts:342`
 
 `packages/api/src/submission/submission.validation.ts`
 
