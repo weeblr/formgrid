@@ -23,7 +23,8 @@ export function createUserRoutes(userController?: UserController): Router {
     router.delete('/profile', authMiddleware, deleteProfile);
 
     // Public routes
-    router.get('/profile/:userId', getPublicProfile);
+    // [weeblr] Signed-in only
+    router.get('/profile/:userId', authMiddleware, getPublicProfile);
 
     return router;
 }

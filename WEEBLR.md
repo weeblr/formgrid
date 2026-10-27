@@ -87,6 +87,10 @@ Each change is tagged `[weeblr]` in a comment, so it can be found with a search 
 - No settings: they hold notification addresses, the honeypot field name and the Jev API key: `packages/api/src/form/form.controller.ts:261`
 - Public route: the detail is logged, not returned: `packages/api/src/form/form.controller.ts:265`
 
+`packages/api/src/form/form.routes.ts`
+
+- Signed-in only: forms are not hosted here, only submissions received: `packages/api/src/form/form.routes.ts:24`
+
 `packages/api/src/form/form.validation.ts`
 
 - Per-form honeypot field name: `packages/api/src/form/form.validation.ts:2`
@@ -125,6 +129,7 @@ Each change is tagged `[weeblr]` in a comment, so it can be found with a search 
 - Success and error pages in the form's language: `packages/api/src/server.ts:97`
 - Account deletion: `packages/api/src/server.ts:99`
 - The detail is logged above, not returned: `packages/api/src/server.ts:124`
+- Signed-in only: `packages/api/src/server.ts:189`
 
 `packages/api/src/submission/submission.controller.ts`
 
@@ -176,6 +181,9 @@ Each change is tagged `[weeblr]` in a comment, so it can be found with a search 
 - Multiple submissions allowed by default: `packages/api/src/submission/submission.validation.ts:29`
 - Language, timezone and auto-reply settings: `packages/api/src/submission/submission.validation.ts:31`
 - Per-form honeypot field name: `packages/api/src/submission/submission.validation.ts:44`
+`packages/api/src/user/user.routes.ts`
+
+- Signed-in only: `packages/api/src/user/user.routes.ts:26`
 
 ### Dashboard
 

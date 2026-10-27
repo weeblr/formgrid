@@ -21,7 +21,8 @@ export function createFormRoutes(formController?: FormController): Router {
     const getFormStatistics = controller.getFormStatistics.bind(controller);
 
     // Public routes (no authentication required)
-    router.get('/slug/:endpointSlug', getFormByEndpointSlug); // Public access to form by endpoint slug
+    // [weeblr] Signed-in only: forms are not hosted here, only submissions received
+    router.get('/slug/:endpointSlug', authMiddleware, getFormByEndpointSlug);
 
     // Protected routes (authentication required)
     router.get('/', authMiddleware, getAllForms);

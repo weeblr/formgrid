@@ -186,7 +186,7 @@ const server = app.listen(PORT, () => {
     console.log('  GET  /api/forms/:id - Get form by ID (protected)');
     console.log('  PUT  /api/forms/:id - Update form (protected)');
     console.log('  DELETE /api/forms/:id - Delete form (protected)');
-    console.log('  GET  /api/forms/slug/:endpointSlug - Get form by slug (public)');
+    console.log('  GET  /api/forms/slug/:endpointSlug - Get form by slug'); // [weeblr] Signed-in only
     console.log('  POST /api/f/:endpointSlug - Submit to form (public, Formspree-style)');
     console.log('  DELETE /api/submissions/:id - Delete submission (protected)');
     console.log('  POST /api/submissions/bulk/delete - Bulk delete submissions (protected)');
