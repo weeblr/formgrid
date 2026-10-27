@@ -1,14 +1,17 @@
 import React, { useMemo } from 'react'
 import { useWeeblrConfig } from '../lib/weeblrConfig'
 
-// [weeblr] Per-form submission settings: multiple submissions, language, timezone, confirmation email
+// [weeblr] Per-form submission settings: multiple submissions, language, timezone, confirmation email and its reply-to
 
 export interface WeeblrSubmissionSettingsValue {
     allowMultipleSubmissions: boolean
     language: string
     timezone: string
     sendAutoReply: boolean
+    confirmationReplyTo: string
 }
+
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
 const DEFAULT_LANGUAGE = 'en'
 const DEFAULT_TIMEZONE = 'UTC'
@@ -21,6 +24,7 @@ export const readWeeblrSubmissionSettings = (settings: any): WeeblrSubmissionSet
     language: typeof settings?.language === 'string' && settings.language ? settings.language : DEFAULT_LANGUAGE,
     timezone: typeof settings?.timezone === 'string' && settings.timezone ? settings.timezone : DEFAULT_TIMEZONE,
     sendAutoReply: settings?.sendAutoReply === true,
+    confirmationReplyTo: typeof settings?.confirmationReplyTo === 'string' ? settings.confirmationReplyTo : '',
 })
 
 export const weeblrSubmissionSettingsChanged = (value: WeeblrSubmissionSettingsValue, settings: any): boolean => {
@@ -63,6 +67,8 @@ export const WeeblrSubmissionSettings: React.FC<WeeblrSubmissionSettingsProps> =
     const timezones = useMemo(() => listTimezones(value.timezone), [value.timezone])
     const languages = config?.languages ?? [{ code: value.language, name: value.language }]
     const update = (patch: Partial<WeeblrSubmissionSettingsValue>) => onChange({ ...value, ...patch })
+    const replyTo = value.confirmationReplyTo.trim()
+    const isReplyToValid = replyTo === '' || EMAIL_PATTERN.test(replyTo)
     const selectClassName = 'w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm bg-white focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-gray-500'
 
     return (
@@ -107,6 +113,25 @@ export const WeeblrSubmissionSettings: React.FC<WeeblrSubmissionSettingsProps> =
                     </div>
                     <Toggle checked={value.sendAutoReply} onChange={(sendAutoReply) => update({ sendAutoReply })} label="Send Confirmation Email" />
                 </div>
+
+                {value.sendAutoReply && (
+                    <div>
+                        <label htmlFor="confirmation-reply-to" className="block text-sm font-medium text-gray-700 mb-2">Reply-to address</label>
+                        <input
+                            id="confirmation-reply-to"
+                            type="email"
+                            value={value.confirmationReplyTo}
+                            onChange={(e) => update({ confirmationReplyTo: e.target.value })}
+                            placeholder="Leave empty for a no-reply address"
+                            autoComplete="email"
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-gray-500"
+                        />
+                        {!isReplyToValid && (
+                            <p className="mt-1 text-sm text-red-600" role="alert">This is not a valid email address.</p>
+                        )}
+                        <p className="mt-1 text-sm text-gray-500">Where replies to confirmation emails go. When empty, replies go to a no-reply address on your sending domain.</p>
+                    </div>
+                )}
 
                 <div className="flex items-center justify-between gap-4">
                     <div>

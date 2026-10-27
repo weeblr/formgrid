@@ -21,6 +21,7 @@ export const en = {
     'email.notification.heading': 'New submission',
     'email.notification.intro': 'A new submission was received for {form}.',
     'email.notification.data_heading': 'Submitted data',
+    'email.notification.details_heading': 'Submission details',
 
     'email.autoreply.subject': 'Thank you for your submission - {form}',
     'email.autoreply.heading': 'Thank you for your submission!',
@@ -34,6 +35,7 @@ export const en = {
     'email.label.value': 'Value',
 
     'email.footer.automated': 'This is an automated message. Please do not reply to this email.',
+    'email.footer.reply_to': 'Replying to this email will send a message to {email}.',
 
     'value.empty': '-',
     'value.yes': 'Yes',

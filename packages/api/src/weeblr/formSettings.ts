@@ -5,6 +5,7 @@ import { DEFAULT_LANGUAGE, getLocale, isSupportedLanguage } from './i18n';
 // - language: language of everything visitors and the owner see about a submission
 // - timezone: IANA zone used for dates in emails
 // - sendAutoReply: email a confirmation to the submitter, off unless turned on
+// - confirmationReplyTo: Reply-To of those confirmations, a no-reply address when empty
 
 export const DEFAULT_TIMEZONE = 'UTC';
 
@@ -27,9 +28,10 @@ export const weeblrFormSettingsFields = {
     language: z.string().refine(isSupportedLanguage, 'Unsupported language').optional(),
     timezone: z.string().refine(isValidTimeZone, 'Unknown timezone').optional(),
     sendAutoReply: z.boolean().optional(),
+    confirmationReplyTo: z.union([z.literal(''), z.string().email('Invalid reply-to address')]).optional(),
 };
 
-type SettingsLike = { language?: unknown; timezone?: unknown; sendAutoReply?: unknown } | null | undefined;
+type SettingsLike = { language?: unknown; timezone?: unknown; sendAutoReply?: unknown; confirmationReplyTo?: unknown } | null | undefined;
 
 export const getFormLanguage = (settings: unknown): string => {
     const language = (settings as SettingsLike)?.language;
@@ -42,6 +44,14 @@ export const getFormTimezone = (settings: unknown): string => {
 };
 
 export const isAutoReplyEnabled = (settings: unknown): boolean => (settings as SettingsLike)?.sendAutoReply === true;
+
+/**
+ * Reply-To of confirmation emails set on the form, empty when not set.
+ */
+export const getConfirmationReplyTo = (settings: unknown): string => {
+    const address = (settings as SettingsLike)?.confirmationReplyTo;
+    return typeof address === 'string' && z.string().email().safeParse(address).success ? address : '';
+};
 
 /**
  * Date and time in the form's language and timezone, with the zone shown.

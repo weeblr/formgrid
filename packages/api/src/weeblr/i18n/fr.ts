@@ -22,6 +22,7 @@ export const fr: Messages = {
     'email.notification.heading': 'Nouvelle réponse',
     'email.notification.intro': 'Une nouvelle réponse a été reçue pour le formulaire {form}.',
     'email.notification.data_heading': 'Données envoyées',
+    'email.notification.details_heading': 'Détails de l’envoi',
 
     'email.autoreply.subject': 'Confirmation de votre envoi - {form}',
     'email.autoreply.heading': 'Merci pour votre envoi !',
@@ -35,6 +36,7 @@ export const fr: Messages = {
     'email.label.value': 'Valeur',
 
     'email.footer.automated': 'Ce message a été envoyé automatiquement. Merci de ne pas y répondre.',
+    'email.footer.reply_to': 'Répondre à cet email enverra un message à l’adresse {email}.',
 
     'value.empty': '-',
     'value.yes': 'Oui',
