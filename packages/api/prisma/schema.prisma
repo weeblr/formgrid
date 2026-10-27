@@ -12,6 +12,10 @@ model User {
   email                    String    @unique
   passwordHash             String
   isEmailVerified          Boolean   @default(true)
+
+  // [weeblr] Missing upstream but used by auth.repository.ts; columns already exist in init.sql
+  verificationToken        String?
+  verificationTokenExpires DateTime?
   
   // Password reset fields
   passwordResetToken       String?
