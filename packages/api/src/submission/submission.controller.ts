@@ -223,10 +223,11 @@ export class SubmissionController {
                         message: errorMessage,
                     });
                 } else {
+                    // [weeblr] Public route: the detail is logged, not returned
+                    console.error('Failed to submit form:', error);
                     res.status(500).json({
                         success: false,
                         message: 'Failed to submit form',
-                        error: errorMessage,
                     });
                 }
             }

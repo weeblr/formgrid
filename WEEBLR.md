@@ -14,6 +14,7 @@ nginx in the `frontend` container serves the dashboard (with security headers: a
 - `ENABLE_ACCOUNTS` (`true` or `false`, default `false`): account creation and deletion. When `false`, the signup and Settings pages return 403 from nginx, their API endpoints return 403, and their links are hidden. Only signing in is possible.
 
 - `ENABLE_UPLOADS` (`true` or `false`, default `false`): file uploads on public forms. When not `true`, any request containing a file gets a 403 before anything is written; forms posted as `multipart/form-data` without files still work (8 KB per field, 100 fields). The upload code, the uploads volume and the `/uploads/` location stay in place.
+- `REDIS_PASSWORD` (required): Redis password, set on the Redis server and used by the backend and the queue worker.
 - `JEV_API_URL` (default `https://api.typesafe.ai`) and `JEV_MODEL` (default `jev-latest`): Jev endpoint and model used by spam filtering, read by the queue worker. Optional; the API key is set per form.
 
 ## Database changes
@@ -25,6 +26,14 @@ ALTER TABLE `Submission`
   ADD COLUMN `spamScore` DOUBLE NULL AFTER `status`,
   ADD COLUMN `dangerScore` DOUBLE NULL AFTER `spamScore`;
 ```
+
+## Upgrading MySQL from 8.0 to 8.4
+
+The compose file uses `mysql:8.4`. On its first start on a volume created by 8.0, MySQL upgrades the data in place by itself (data dictionary and system tables); nothing has to be exported or imported. To keep a way back, since 8.4 data cannot be opened by 8.0:
+
+1. Before deploying, back up the database from the running 8.0 container: `docker exec formgrid-db sh -c 'mysqldump -uroot -p"$MYSQL_ROOT_PASSWORD" --single-transaction --databases "$MYSQL_DATABASE"' > formgrid-backup.sql`
+2. Deploy. The first start of the `db` container takes a few seconds longer; its log shows `Server upgrade from '800xx' to '804xx' completed`.
+3. If anything goes wrong: set the image back to `mysql:8.0`, remove the `mysql_data` volume, start, and restore with `docker exec -i formgrid-db sh -c 'mysql -uroot -p"$MYSQL_ROOT_PASSWORD"' < formgrid-backup.sql`.
 
 ## Fork-only files
 
@@ -68,9 +77,15 @@ Each change is tagged `[weeblr]` in a comment, so it can be found with a search 
 - Missing upstream but used by auth.repository.ts; columns already exist in init.sql: `packages/api/prisma/schema.prisma:16`
 - Jev spam filtering: probability (0 to 1) that the submission is spam / dangerous, null when not classified: `packages/api/prisma/schema.prisma:72`
 
+`packages/api/src/config/prisma.ts`
+
+- No query details in error messages: `packages/api/src/config/prisma.ts:13`
+
 `packages/api/src/form/form.controller.ts`
 
+- Request body not logged: the settings hold the Jev API key: `packages/api/src/form/form.controller.ts:93`
 - No settings: they hold notification addresses, the honeypot field name and the Jev API key: `packages/api/src/form/form.controller.ts:261`
+- Public route: the detail is logged, not returned: `packages/api/src/form/form.controller.ts:265`
 
 `packages/api/src/form/form.validation.ts`
 
@@ -109,6 +124,7 @@ Each change is tagged `[weeblr]` in a comment, so it can be found with a search 
 - Instance settings for the dashboard: `packages/api/src/server.ts:95`
 - Success and error pages in the form's language: `packages/api/src/server.ts:97`
 - Account deletion: `packages/api/src/server.ts:99`
+- The detail is logged above, not returned: `packages/api/src/server.ts:124`
 
 `packages/api/src/submission/submission.controller.ts`
 
@@ -123,9 +139,10 @@ Each change is tagged `[weeblr]` in a comment, so it can be found with a search 
 - Background jobs are already queued by submissionService.submitToForm; queueing them here too sent every notification and webhook twice: `packages/api/src/submission/submission.controller.ts:173`
 - Our own success page, in the form's language, instead of a hardcoded localhost URL: `packages/api/src/submission/submission.controller.ts:183`
 - Our own error page, in the form's language, instead of a hardcoded localhost URL: `packages/api/src/submission/submission.controller.ts:205`
-- Jev spam filtering scores, null when not classified: `packages/api/src/submission/submission.controller.ts:341`
-- Jev spam filtering scores, null when not classified: `packages/api/src/submission/submission.controller.ts:406`
-- Our own success page, in the form's language, instead of a hardcoded localhost URL: `packages/api/src/submission/submission.controller.ts:651`
+- Public route: the detail is logged, not returned: `packages/api/src/submission/submission.controller.ts:226`
+- Jev spam filtering scores, null when not classified: `packages/api/src/submission/submission.controller.ts:342`
+- Jev spam filtering scores, null when not classified: `packages/api/src/submission/submission.controller.ts:407`
+- Our own success page, in the form's language, instead of a hardcoded localhost URL: `packages/api/src/submission/submission.controller.ts:652`
 
 `packages/api/src/submission/submission.routes.ts`
 

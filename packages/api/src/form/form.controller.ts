@@ -90,7 +90,7 @@ export class FormController {
      */
     async createForm(req: Request, res: Response): Promise<void> {
         try {
-            console.log('Create form request body:', JSON.stringify(req.body, null, 2));
+            // [weeblr] Request body not logged: the settings hold the Jev API key
             // Validate input
             const validationResult = createFormSchema.safeParse(req.body);
             if (!validationResult.success) {
@@ -262,10 +262,11 @@ export class FormController {
                 },
             });
         } catch (error) {
+            // [weeblr] Public route: the detail is logged, not returned
+            console.error('Failed to retrieve form:', error);
             res.status(500).json({
                 success: false,
                 message: 'Failed to retrieve form',
-                error: (error as Error).message,
             });
         }
     }

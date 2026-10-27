@@ -10,7 +10,7 @@ declare global {
 const createPrismaClient = (): PrismaClient => {
     return new PrismaClient({
         log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error'],
-        errorFormat: 'pretty',
+        errorFormat: 'minimal', // [weeblr] No query details in error messages
     });
 };
 

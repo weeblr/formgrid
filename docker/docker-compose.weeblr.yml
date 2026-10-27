@@ -139,7 +139,8 @@ x-frontend-build: &frontend-build
 services:
   # MySQL Database
   db:
-    image: mysql:8.0
+    # Upstream publishes 8.4 for Oracle Linux only. Upgrading from 8.0: see WEEBLR.md
+    image: mysql:8.4
     container_name: formgrid-db
     restart: unless-stopped
     environment:
@@ -160,6 +161,10 @@ services:
     image: redis:7-alpine
     container_name: formgrid-redis
     restart: unless-stopped
+    command: ["redis-server", "--requirepass", "${REDIS_PASSWORD:?REDIS_PASSWORD must be set}"]
+    environment:
+      # Used by redis-cli in the healthcheck
+      - REDISCLI_AUTH=${REDIS_PASSWORD}
     volumes:
       - redis_data:/data
     healthcheck:
@@ -181,12 +186,11 @@ services:
       - REDIS_HOST=redis
       - REDIS_PORT=6379
       - REDIS_DB=0
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
       - JWT_SECRET=${JWT_SECRET}
       - JWT_EXPIRES_IN=1d
       - EMAIL_PROVIDER=resend
       - RESEND_API_KEY=${RESEND_API_KEY}
-      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
-      - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
       - EMAIL_FROM=${EMAIL_FROM}
       - APP_URL=${APP_URL}
       # File Storage Configuration
@@ -231,6 +235,8 @@ services:
       - REDIS_HOST=redis
       - REDIS_PORT=6379
       - REDIS_DB=0
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+      # Not used by the worker, but required at startup by the shared configuration
       - JWT_SECRET=${JWT_SECRET}
       - EMAIL_PROVIDER=resend
       - RESEND_API_KEY=${RESEND_API_KEY}

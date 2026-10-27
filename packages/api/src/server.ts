@@ -121,9 +121,10 @@ app.get('/', (_req: Request, res: Response) => {
 app.use((error: Error, _req: Request, res: Response, _next: NextFunction) => {
     console.error('Global error handler:', error);
 
+    // [weeblr] The detail is logged above, not returned
     res.status(400).json({
         success: false,
-        error: error.message || 'Internal server error'
+        error: 'Invalid request'
     });
 });
 
