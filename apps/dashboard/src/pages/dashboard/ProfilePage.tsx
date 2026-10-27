@@ -25,8 +25,10 @@ export const ProfilePage: React.FC = () => {
         const fetchProfile = async () => {
             try {
                 setIsLoading(true)
-                const response = await api.get('/user/me')
-                const userData = response.data
+                // [weeblr] Missing /api prefix upstream
+                const response = await api.get('/api/user/me')
+                // [weeblr] API wraps the payload as { success, message, data }
+                const userData = response.data.data
                 setUser(userData)
             } catch (error: any) {
                 console.error('Failed to fetch profile:', error)
