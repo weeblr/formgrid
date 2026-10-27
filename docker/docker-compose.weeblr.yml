@@ -1,3 +1,31 @@
+x-api-build: &api-build
+  context: ..
+  args:
+    WEEBLR_NODE_VERSION: ${WEEBLR_NODE_VERSION:-24}
+  # Upstream's Dockerfile only has a dev stage relying on a bind mount of the repo,
+  # so the production image is built here, keeping all our changes in this one file.
+  # Upstream code does not pass its own strict type check (it runs with
+  # ts-node-dev --transpile-only), so tsc errors are logged but only missing output fails.
+  dockerfile_inline: |
+    ARG WEEBLR_NODE_VERSION=24
+    FROM node:$${WEEBLR_NODE_VERSION}-trixie-slim
+    RUN apt-get update \
+      && apt-get install -y --no-install-recommends openssl ca-certificates \
+      && rm -rf /var/lib/apt/lists/*
+    RUN corepack enable && corepack prepare pnpm@8.15.0 --activate
+    WORKDIR /app
+    COPY package.json pnpm-lock.yaml pnpm-workspace.yaml tsconfig.base.json ./
+    COPY packages/api/package.json ./packages/api/
+    RUN pnpm install --frozen-lockfile --filter @formgrid/api
+    COPY packages/api ./packages/api
+    WORKDIR /app/packages/api
+    RUN pnpm exec prisma generate
+    RUN pnpm run build || true
+    RUN test -f dist/server.js && test -f dist/queueWorker.js
+    ENV NODE_ENV=production
+    EXPOSE 4000
+    CMD ["node", "dist/server.js"]
+
 services:
   # MySQL Database
   db:
@@ -31,13 +59,11 @@ services:
 
   # Backend Service
   backend:
-    build:
-      context: ..
-      dockerfile: packages/api/Dockerfile
+    build: *api-build
     container_name: formgrid-backend
     restart: unless-stopped
     volumes:
-      - uploads_data:/app/packages/api/uploads  # Local file storage
+      - uploads_data:/app/uploads  # Local file storage
     environment:
       - NODE_ENV=production
       - PORT=4000
@@ -55,13 +81,12 @@ services:
       - APP_URL=${BACKEND_APP_URL}
       # File Storage Configuration
       - FILE_STORAGE_TYPE=local  # Options: local, s3, gcs, minio
+      - UPLOAD_PATH=/app/uploads
     depends_on:
       db:
         condition: service_healthy
       redis:
         condition: service_healthy
-    command: ["sh", "-c", "pnpm build && node dist/server.js"]
-    working_dir: /app/packages/api
 
   # Frontend Service
   frontend:
@@ -79,13 +104,11 @@ services:
 
   # Queue Worker Service
   queue-worker:
-    build:
-      context: ..
-      dockerfile: packages/api/Dockerfile
+    build: *api-build
     container_name: formgrid-queue-worker
     restart: unless-stopped
     volumes:
-      - uploads_data:/app/packages/api/uploads
+      - uploads_data:/app/uploads
     environment:
       - NODE_ENV=production
       - DATABASE_URL=mysql://${MYSQL_USER}:${MYSQL_PASSWORD}@db:3306/${MYSQL_DATABASE}
@@ -103,8 +126,7 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
-    command: ["sh", "-c", "pnpm build && node dist/queueWorker.js"]
-    working_dir: /app/packages/api
+    command: ["node", "dist/queueWorker.js"]
 
 volumes:
   mysql_data:
