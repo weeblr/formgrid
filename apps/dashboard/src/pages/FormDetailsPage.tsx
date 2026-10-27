@@ -7,6 +7,8 @@ import { useSubmissions, Submission } from '../hooks/useSubmissions';
 import api from '../lib/api';
 // [weeblr] Per-form honeypot field name
 import { WeeblrHoneypotField } from '../components/WeeblrHoneypotField';
+// [weeblr] Per-form submission settings: multiple submissions, language, timezone, confirmation email
+import { WeeblrSubmissionSettings, readWeeblrSubmissionSettings, weeblrSubmissionSettingsChanged, isBuiltInSuccessUrl } from '../components/WeeblrSubmissionSettings';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { tomorrow } from 'react-syntax-highlighter/dist/cjs/styles/prism';
 
@@ -82,8 +84,8 @@ export function FormDetailsPage() {
     const [selectedSubmissions, setSelectedSubmissions] = useState<Set<string>>(new Set());
     const [isAllSelected, setIsAllSelected] = useState(false);
     const [notificationEmails, setNotificationEmails] = useState<string[]>([]);
-    // [weeblr] Allow multiple submissions, allowed unless explicitly turned off
-    const [allowMultipleSubmissions, setAllowMultipleSubmissions] = useState(true);
+    // [weeblr] Per-form submission settings: multiple submissions, language, timezone, confirmation email
+    const [weeblrSettings, setWeeblrSettings] = useState(() => readWeeblrSubmissionSettings(null));
     const [newEmail, setNewEmail] = useState('');
     const [redirectUrl, setRedirectUrl] = useState('');
     const [copiedStates, setCopiedStates] = useState<{ [key: string]: boolean }>({});
@@ -129,8 +131,8 @@ export function FormDetailsPage() {
             editData.isActive !== form.isActive ||
             JSON.stringify(notificationEmails.sort()) !== JSON.stringify(currentEmails.sort()) ||
             redirectUrl !== (form.settings?.redirectUrl || '') ||
-            // [weeblr] Allow multiple submissions
-            allowMultipleSubmissions !== (form.settings?.allowMultipleSubmissions !== false) ||
+            // [weeblr] Per-form submission settings
+            weeblrSubmissionSettingsChanged(weeblrSettings, form.settings) ||
             spamProtection.enabled !== currentSpamProtection.enabled ||
             spamProtection.honeypot !== currentSpamProtection.honeypot ||
             spamProtection.rateLimit !== currentSpamProtection.rateLimit ||
@@ -142,7 +144,7 @@ export function FormDetailsPage() {
     // Update hasChanges when editData, notificationEmails, redirectUrl, or spamProtection change
     React.useEffect(() => {
         setHasChanges(checkForChanges());
-    }, [editData, form, notificationEmails, redirectUrl, spamProtection, allowMultipleSubmissions]); // [weeblr] allowMultipleSubmissions
+    }, [editData, form, notificationEmails, redirectUrl, spamProtection, weeblrSettings]); // [weeblr] weeblrSettings
 
     // Function to fetch real form statistics
     const fetchFormStatistics = async (formId: string) => {
@@ -191,16 +193,17 @@ export function FormDetailsPage() {
                             setNotificationEmails(defaultEmails);
                         }
 
-                        // [weeblr] Allow multiple submissions, allowed unless explicitly turned off
-                        setAllowMultipleSubmissions(formData.settings?.allowMultipleSubmissions !== false);
+                        // [weeblr] Per-form submission settings
+                        setWeeblrSettings(readWeeblrSubmissionSettings(formData.settings));
 
                         // Initialize redirect URL from form settings
-                        if (formData.settings?.redirectUrl) {
+                        // [weeblr] A URL of the built-in page is shown as empty: the page now follows the form's language
+                        if (formData.settings?.redirectUrl && !isBuiltInSuccessUrl(formData.settings.redirectUrl)) {
                             setRedirectUrl(formData.settings.redirectUrl);
                         } else {
                             // Set default redirect URL if none configured
-                            // [weeblr] Our own success page instead of a hardcoded localhost URL
-                            setRedirectUrl(`${api.defaults.baseURL}/submission-success.html`);
+                            // [weeblr] Empty: the built-in page in the form's language is used
+                            setRedirectUrl('');
                         }
 
                         // Initialize spam protection settings from form data
@@ -424,8 +427,8 @@ export function FormDetailsPage() {
                     ...form.settings,
                     notificationEmail: notificationEmails.length > 0 ? notificationEmails.join(',') : undefined,
                     redirectUrl: redirectUrl || undefined,
-                    // [weeblr] Allow multiple submissions
-                    allowMultipleSubmissions,
+                    // [weeblr] Per-form submission settings
+                    ...weeblrSettings,
                     // Save spam protection settings to backend
                     // This is what the backend uses to determine which security checks to run
                     // [weeblr] An empty honeypot field name is not saved, the default applies
@@ -1462,25 +1465,8 @@ form.addEventListener('submit', async (e) => {
                 </div>
             </div>
 
-            {/* [weeblr] Submission settings */}
-            <div className="bg-white shadow-sm rounded-lg border border-gray-200 p-6">
-                <h3 className="text-lg font-medium text-gray-900 mb-4">Submission Settings</h3>
-                <div className="flex items-center justify-between">
-                    <div>
-                        <div className="text-sm font-medium text-gray-900">Allow Multiple Submissions</div>
-                        <div className="text-sm text-gray-500">When off, a visitor (IP address) can only submit once per hour.</div>
-                    </div>
-                    <label className="relative inline-flex items-center cursor-pointer">
-                        <input
-                            type="checkbox"
-                            checked={allowMultipleSubmissions}
-                            onChange={(e) => setAllowMultipleSubmissions(e.target.checked)}
-                            className="sr-only peer"
-                        />
-                        <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-gray-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-gray-900"></div>
-                    </label>
-                </div>
-            </div>
+            {/* [weeblr] Per-form submission settings: multiple submissions, language, timezone, confirmation email */}
+            <WeeblrSubmissionSettings value={weeblrSettings} onChange={setWeeblrSettings} />
 
             {/* Redirect Settings */}
             <div className="bg-white shadow-sm rounded-lg border border-gray-200 p-6">
@@ -1492,8 +1478,8 @@ form.addEventListener('submit', async (e) => {
                         </label>
                         <input
                             type="url"
-                            // [weeblr] Our own success page instead of a hardcoded localhost URL
-                            placeholder={`${api.defaults.baseURL}/submission-success.html`}
+                            // [weeblr] Empty means the built-in page in the form's language
+                            placeholder="Leave empty for the built-in thank-you page"
                             value={redirectUrl}
                             onChange={(e) => {
                                 setRedirectUrl(e.target.value);

@@ -1,4 +1,6 @@
 import { Router, Request, Response } from 'express';
+import { LANGUAGES, DEFAULT_LANGUAGE } from './i18n';
+import { DEFAULT_TIMEZONE } from './formSettings';
 
 // [weeblr] Instance settings shared with the dashboard
 
@@ -19,6 +21,9 @@ export function createWeeblrConfigRoutes(): Router {
             success: true,
             data: {
                 enableAccounts: accountsEnabled(),
+                languages: LANGUAGES.map(({ code, name }) => ({ code, name })),
+                defaultLanguage: DEFAULT_LANGUAGE,
+                defaultTimezone: DEFAULT_TIMEZONE,
             },
         });
     });

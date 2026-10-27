@@ -5,6 +5,8 @@ import { CreateSubmissionInput, FormSettings } from './submission.validation';
 import { addEmailJob, addWebhookJob, addAutoReplyEmailJob } from '../queue/queueConfig';
 import { SpamProtectionService, SpamProtectionConfig } from '../services/spamProtectionService';
 import { SubmissionNotFoundError } from './submission.errors';
+// [weeblr] Auto-reply only when turned on for the form
+import { isAutoReplyEnabled } from '../weeblr/formSettings';
 
 /**
  * Submission service for business logic operations
@@ -331,6 +333,11 @@ export class SubmissionService {
      */
     async queueAutoReplyEmail(submission: Submission, form: Form): Promise<void> {
         if (!submission.email) {
+            return;
+        }
+
+        // [weeblr] Only when turned on for the form: it emails any address a visitor types in
+        if (!isAutoReplyEnabled(form.settings)) {
             return;
         }
 

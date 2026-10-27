@@ -25,6 +25,7 @@ import { SubmissionController } from './submission/submission.controller';
 import { createWeeblrAccountRoutes } from './weeblr/account.routes';
 import { createWeeblrAuthRoutes } from './weeblr/auth.routes';
 import { createWeeblrConfigRoutes } from './weeblr/config';
+import { createWeeblrSubmissionPagesRoutes } from './weeblr/submissionPages';
 
 // Load environment variables
 config();
@@ -93,6 +94,8 @@ app.use('/api/auth', createWeeblrAuthRoutes(prisma, emailProvider));
 app.use('/api/auth', createAuthRoutes(authController));
 // [weeblr] Instance settings for the dashboard
 app.use('/api/weeblr', createWeeblrConfigRoutes());
+// [weeblr] Success and error pages in the form's language
+app.use('/api/weeblr', createWeeblrSubmissionPagesRoutes(prisma));
 // [weeblr] Account deletion
 app.use('/api/user', createWeeblrAccountRoutes(prisma));
 app.use('/api/user', createUserRoutes(userController));

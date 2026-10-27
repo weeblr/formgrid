@@ -1,6 +1,8 @@
 import { z } from 'zod';
 // [weeblr] Per-form honeypot field name
 import { HONEYPOT_FIELD_PATTERN } from '../weeblr/honeypot';
+// [weeblr] Language, timezone and auto-reply settings
+import { weeblrFormSettingsFields } from '../weeblr/formSettings';
 
 /**
  * Validation schemas for form endpoints
@@ -10,6 +12,8 @@ import { HONEYPOT_FIELD_PATTERN } from '../weeblr/honeypot';
 export const formSettingsSchema = z.object({
     // [weeblr] Multiple submissions allowed by default
     allowMultipleSubmissions: z.boolean().default(true),
+    // [weeblr] Language, timezone and auto-reply settings
+    ...weeblrFormSettingsFields,
     requireEmailNotification: z.boolean().default(false),
     notificationEmail: z.string().email().optional(),
     redirectUrl: z.string().url().optional(),

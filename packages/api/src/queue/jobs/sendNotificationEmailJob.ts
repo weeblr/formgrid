@@ -1,6 +1,8 @@
 import { Job } from 'bull';
 import { SendNotificationEmailData } from '../queueConfig';
 import { MailerService, EmailTemplateData } from '../../services/mailerService';
+// [weeblr] Emails in the form's language, with escaped values
+import { sendNotificationEmail } from '../../weeblr/emails';
 
 /**
  * Send notification email job processor
@@ -35,7 +37,8 @@ export class SendNotificationEmailJob {
                 fields: this.prepareFieldsData(submissionData.payload, formData.settings),
             };
 
-            await this.mailerService.sendFormNotificationEmail(notificationEmail, templateData);
+            // [weeblr] Emails in the form's language, with escaped values
+            await sendNotificationEmail(this.mailerService, notificationEmail, { data: templateData, settings: formData.settings, createdAt: submissionData.createdAt });
 
             console.log(`Email notification sent successfully for submission ${submissionId}`);
         } catch (error) {

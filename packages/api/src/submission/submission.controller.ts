@@ -8,8 +8,8 @@ import { checkFormSubmissionRateLimit } from '../middleware/rateLimit';
 import { resolveSpamProtectionSettings } from '../form/spamProtectionDefaults';
 import { AuthRequest } from '../presentation/middleware/auth';
 import { SubmissionNotFoundError } from './submission.errors';
-// [weeblr] Needed for our own success and error pages
-import { env } from '../config/env';
+// [weeblr] Our own success and error pages, in the form's language
+import { getSuccessRedirectUrl, getErrorRedirectUrl } from '../weeblr/submissionPages';
 // [weeblr] Honeypot with a per-form field name
 import { getHoneypotField, takeHoneypot } from '../weeblr/honeypot';
 
@@ -163,8 +163,8 @@ export class SubmissionController {
                 const form = await formRepo.findByEndpointSlug(endpointSlug);
 
                 // Use custom redirect URL or default success page
-                // [weeblr] Our own success page instead of a hardcoded localhost URL
-                const redirectUrl = (form?.settings as any)?.redirectUrl || `${env.APP_URL}/submission-success.html`;
+                // [weeblr] Our own success page, in the form's language, instead of a hardcoded localhost URL
+                const redirectUrl = getSuccessRedirectUrl(endpointSlug, (form?.settings as any)?.redirectUrl);
 
                 return res.redirect(redirectUrl);
             } else {
@@ -185,8 +185,8 @@ export class SubmissionController {
 
             if (isHtmlForm) {
                 // For HTML forms, redirect to error page with error message
-                // [weeblr] Our own error page instead of a hardcoded localhost URL
-                const errorPageUrl = `${env.APP_URL}/submission-error.html?message=${encodeURIComponent(errorMessage)}`;
+                // [weeblr] Our own error page, in the form's language, instead of a hardcoded localhost URL
+                const errorPageUrl = getErrorRedirectUrl(req.params.endpointSlug, errorMessage);
                 return res.redirect(errorPageUrl);
             } else {
                 // JSON responses for API calls
@@ -625,8 +625,8 @@ export class SubmissionController {
             contentType.includes('multipart/form-data');
 
         if (isHtmlForm) {
-            // [weeblr] Our own success page instead of a hardcoded localhost URL
-            const redirectUrl = settings?.redirectUrl || `${env.APP_URL}/submission-success.html`;
+            // [weeblr] Our own success page, in the form's language, instead of a hardcoded localhost URL
+            const redirectUrl = getSuccessRedirectUrl(req.params.endpointSlug, settings?.redirectUrl);
             res.redirect(redirectUrl);
             return;
         }

@@ -1,6 +1,8 @@
 import { Job } from 'bull';
 import { SendAutoReplyEmailData } from '../queueConfig';
 import { MailerService, EmailTemplateData } from '../../services/mailerService';
+// [weeblr] Emails in the form's language, with escaped values
+import { sendAutoReplyEmail } from '../../weeblr/emails';
 
 /**
  * Send auto-reply email job processor
@@ -35,7 +37,8 @@ export class SendAutoReplyEmailJob {
                 fields: this.prepareFieldsData(submissionData.payload, formData.settings),
             };
 
-            await this.mailerService.sendAutoReplyEmail(submitterEmail, templateData);
+            // [weeblr] Emails in the form's language, with escaped values
+            await sendAutoReplyEmail(this.mailerService, submitterEmail, { data: templateData, settings: formData.settings, createdAt: submissionData.createdAt });
 
             console.log(`Auto-reply email sent successfully for submission ${submissionId}`);
         } catch (error) {
