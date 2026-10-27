@@ -184,6 +184,11 @@ Each change is tagged `[weeblr]` in a comment, so it can be found with a search 
 
 - Settings only when accounts are enabled: `apps/dashboard/src/components/dashboard/UserAvatarDropdown.tsx:5`
 
+`apps/dashboard/src/lib/api.ts`
+
+- clearToken for the expired-session redirect: `apps/dashboard/src/lib/api.ts:2`
+- Expired or invalid session: back to the sign-in page. Only for requests that sent a token, so a failed login keeps its message: `apps/dashboard/src/lib/api.ts:49`
+
 `apps/dashboard/src/pages/FormDetailsPage.tsx`
 
 - Per-form honeypot field name: `apps/dashboard/src/pages/FormDetailsPage.tsx:8`

@@ -1,5 +1,5 @@
 import axios, { AxiosInstance, InternalAxiosRequestConfig, AxiosResponse } from 'axios'
-import { getToken } from './auth'
+import { getToken, clearToken } from './auth' // [weeblr] clearToken for the expired-session redirect
 
 /**
  * API client configuration
@@ -46,6 +46,11 @@ api.interceptors.response.use(
             // Token might be expired or invalid
             // You can dispatch a logout action here if using Redux/Context
             console.warn('Authentication token expired or invalid')
+            // [weeblr] Expired or invalid session: back to the sign-in page. Only for requests that sent a token, so a failed login keeps its message
+            if (error.config?.headers?.Authorization && window.location.pathname !== '/login') {
+                clearToken()
+                window.location.replace('/login')
+            }
         }
         return Promise.reject(error)
     }
