@@ -128,28 +128,34 @@ Each change is tagged `[weeblr]` in a comment, so it can be found with a search 
 - Per-form honeypot field name: `apps/dashboard/src/pages/FormDetailsPage.tsx:36`
 - Open a given tab with ?tab=, used by the Edit icon of the forms list: `apps/dashboard/src/pages/FormDetailsPage.tsx:71`
 - Per-form submission settings: multiple submissions, language, timezone, confirmation email: `apps/dashboard/src/pages/FormDetailsPage.tsx:87`
-- Per-form honeypot field name, empty means the default: `apps/dashboard/src/pages/FormDetailsPage.tsx:101`
-- Per-form submission settings: `apps/dashboard/src/pages/FormDetailsPage.tsx:134`
-- Per-form honeypot field name: `apps/dashboard/src/pages/FormDetailsPage.tsx:139`
-- weeblrSettings: `apps/dashboard/src/pages/FormDetailsPage.tsx:147`
-- Multiple submissions allowed by default: `apps/dashboard/src/pages/FormDetailsPage.tsx:175`
-- Per-form submission settings: `apps/dashboard/src/pages/FormDetailsPage.tsx:196`
-- A URL of the built-in page is shown as empty: the page now follows the form's language: `apps/dashboard/src/pages/FormDetailsPage.tsx:200`
-- Empty: the built-in page in the form's language is used: `apps/dashboard/src/pages/FormDetailsPage.tsx:205`
-- Older forms have no honeypot field name: `apps/dashboard/src/pages/FormDetailsPage.tsx:214`
-- Per-form honeypot field name, empty means the default: `apps/dashboard/src/pages/FormDetailsPage.tsx:223`
-- Real API URL instead of a hardcoded localhost one: `apps/dashboard/src/pages/FormDetailsPage.tsx:244`
-- Per-form submission settings: `apps/dashboard/src/pages/FormDetailsPage.tsx:430`
-- An empty honeypot field name is not saved, the default applies: `apps/dashboard/src/pages/FormDetailsPage.tsx:434`
-- Per-form submission settings: multiple submissions, language, timezone, confirmation email: `apps/dashboard/src/pages/FormDetailsPage.tsx:1468`
-- Empty means the built-in page in the form's language: `apps/dashboard/src/pages/FormDetailsPage.tsx:1481`
-- Hidden: needs a reCAPTCHA key this instance does not set, and upstream drops the token before checking it: `apps/dashboard/src/pages/FormDetailsPage.tsx:1502`
-- Hidden: this field is never saved nor used: `apps/dashboard/src/pages/FormDetailsPage.tsx:1534`
-- Per-form honeypot field name: `apps/dashboard/src/pages/FormDetailsPage.tsx:1569`
-- CAPTCHA toggle is hidden: `apps/dashboard/src/pages/FormDetailsPage.tsx:1607`
-- CORS field is hidden: `apps/dashboard/src/pages/FormDetailsPage.tsx:1610`
-- Real uploads URL instead of a hardcoded localhost one: `apps/dashboard/src/pages/FormDetailsPage.tsx:1775`
-- Real uploads URL instead of a hardcoded localhost one: `apps/dashboard/src/pages/FormDetailsPage.tsx:1786`
+- Pending value of Enable Notifications; upstream changed the saved form instead, so it could never be saved: `apps/dashboard/src/pages/FormDetailsPage.tsx:89`
+- Per-form honeypot field name, empty means the default: `apps/dashboard/src/pages/FormDetailsPage.tsx:103`
+- Per-form submission settings: `apps/dashboard/src/pages/FormDetailsPage.tsx:136`
+- Detect Enable Notifications changes: `apps/dashboard/src/pages/FormDetailsPage.tsx:138`
+- Per-form honeypot field name: `apps/dashboard/src/pages/FormDetailsPage.tsx:143`
+- Re-check changes for the fork's settings and Enable Notifications: `apps/dashboard/src/pages/FormDetailsPage.tsx:151`
+- Multiple submissions allowed by default: `apps/dashboard/src/pages/FormDetailsPage.tsx:179`
+- Per-form submission settings: `apps/dashboard/src/pages/FormDetailsPage.tsx:200`
+- Load Enable Notifications: `apps/dashboard/src/pages/FormDetailsPage.tsx:202`
+- A URL of the built-in page is shown as empty: the page now follows the form's language: `apps/dashboard/src/pages/FormDetailsPage.tsx:206`
+- Empty: the built-in page in the form's language is used: `apps/dashboard/src/pages/FormDetailsPage.tsx:211`
+- Older forms have no honeypot field name: `apps/dashboard/src/pages/FormDetailsPage.tsx:220`
+- Per-form honeypot field name, empty means the default: `apps/dashboard/src/pages/FormDetailsPage.tsx:229`
+- Real API URL instead of a hardcoded localhost one: `apps/dashboard/src/pages/FormDetailsPage.tsx:250`
+- Save Enable Notifications: `apps/dashboard/src/pages/FormDetailsPage.tsx:435`
+- Per-form submission settings: `apps/dashboard/src/pages/FormDetailsPage.tsx:438`
+- An empty honeypot field name is not saved, the default applies: `apps/dashboard/src/pages/FormDetailsPage.tsx:442`
+- Keep the saved settings, otherwise the page still sees unsaved changes after saving: `apps/dashboard/src/pages/FormDetailsPage.tsx:456`
+- Pending value, saved with Save Changes like the other settings: `apps/dashboard/src/pages/FormDetailsPage.tsx:1419`
+- Per-form submission settings: multiple submissions, language, timezone, confirmation email: `apps/dashboard/src/pages/FormDetailsPage.tsx:1469`
+- Empty means the built-in page in the form's language: `apps/dashboard/src/pages/FormDetailsPage.tsx:1482`
+- Hidden: needs a reCAPTCHA key this instance does not set, and upstream drops the token before checking it: `apps/dashboard/src/pages/FormDetailsPage.tsx:1503`
+- Hidden: this field is never saved nor used: `apps/dashboard/src/pages/FormDetailsPage.tsx:1535`
+- Per-form honeypot field name: `apps/dashboard/src/pages/FormDetailsPage.tsx:1570`
+- CAPTCHA toggle is hidden: `apps/dashboard/src/pages/FormDetailsPage.tsx:1608`
+- CORS field is hidden: `apps/dashboard/src/pages/FormDetailsPage.tsx:1611`
+- Real uploads URL instead of a hardcoded localhost one: `apps/dashboard/src/pages/FormDetailsPage.tsx:1776`
+- Real uploads URL instead of a hardcoded localhost one: `apps/dashboard/src/pages/FormDetailsPage.tsx:1787`
 
 `apps/dashboard/src/pages/FormsPage.tsx`
 
