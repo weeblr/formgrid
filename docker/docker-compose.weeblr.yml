@@ -34,6 +34,8 @@ x-frontend-build: &frontend-build
     VITE_API_BASE_URL: ${APP_URL}
   # Upstream's Dockerfile only runs the Vite dev server. The backend CORS list is
   # hardcoded to localhost, so the dashboard and /api are served from the same origin.
+  # Rate limit (nginx only): 5 per minute per IP, IPv6 grouped by /64, burst 5, on POST to
+  # login, password reset and the public submission routes; 429 when exceeded, logged.
   dockerfile_inline: |
     # syntax=docker/dockerfile:1
     ARG WEEBLR_NODE_VERSION=24
@@ -63,6 +65,18 @@ x-frontend-build: &frontend-build
         "true" 1;
     }
 
+    map $$remote_addr $$wbl_limit_ip {
+        "~^(?<prefix>[0-9a-f]{1,4}:[0-9a-f]{1,4}:[0-9a-f]{1,4}:[0-9a-f]{1,4}):" $$prefix;
+        default $$remote_addr;
+    }
+
+    map "$$request_method $$uri" $$wbl_limit_key {
+        "~*^POST /api/(auth/(login|forgot-password|reset-password)|f/[^/]+|api/f/[^/]+|forms/[^/]+/submit)/?$$" $$wbl_limit_ip;
+        default "";
+    }
+
+    limit_req_zone $$wbl_limit_key zone=wbl_public:10m rate=5r/m;
+
     server {
         listen 80;
         root /usr/share/nginx/html;
@@ -78,6 +92,9 @@ x-frontend-build: &frontend-build
         real_ip_header CF-Connecting-IP;
 
         location /api/ {
+            limit_req zone=wbl_public burst=5 nodelay;
+            limit_req_status 429;
+            limit_req_log_level warn;
             resolver 127.0.0.11 valid=10s ipv6=off;
             set $$backend_upstream http://backend:4000;
             proxy_pass $$backend_upstream;
