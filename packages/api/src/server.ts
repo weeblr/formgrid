@@ -28,6 +28,9 @@ config();
 const app = express();
 const PORT = env.PORT || 4000;
 
+// [weeblr] Behind a single reverse proxy (nginx), which sets X-Forwarded-For to the client IP
+app.set('trust proxy', 1);
+
 // CORS configuration
 app.use(cors({
     origin: [
