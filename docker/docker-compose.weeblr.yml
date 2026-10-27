@@ -115,6 +115,7 @@ services:
       - REDIS_HOST=redis
       - REDIS_PORT=6379
       - REDIS_DB=0
+      - JWT_SECRET=${JWT_SECRET}
       - EMAIL_PROVIDER=resend
       - RESEND_API_KEY=${RESEND_API_KEY}
       - EMAIL_FROM=${EMAIL_FROM}
