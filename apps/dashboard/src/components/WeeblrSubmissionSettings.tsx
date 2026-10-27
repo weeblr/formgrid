@@ -66,7 +66,7 @@ interface WeeblrSubmissionSettingsProps {
 export const WeeblrSubmissionSettings: React.FC<WeeblrSubmissionSettingsProps> = ({ value, onChange, children }) => {
     const config = useWeeblrConfig()
     const timezones = useMemo(() => listTimezones(value.timezone), [value.timezone])
-    const languages = config?.languages ?? [{ code: value.language, name: value.language }]
+    const languages = config.languages
     const update = (patch: Partial<WeeblrSubmissionSettingsValue>) => onChange({ ...value, ...patch })
     const replyTo = value.confirmationReplyTo.trim()
     const isReplyToValid = replyTo === '' || EMAIL_PATTERN.test(replyTo)

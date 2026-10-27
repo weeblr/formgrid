@@ -32,6 +32,7 @@ x-frontend-build: &frontend-build
     WEEBLR_NODE_VERSION: ${WEEBLR_NODE_VERSION:-24}
     WEEBLR_NGINX_VERSION: ${WEEBLR_NGINX_VERSION:-1.31.8}
     VITE_API_BASE_URL: ${APP_URL}
+    VITE_ENABLE_ACCOUNTS: ${ENABLE_ACCOUNTS:-false}
   # Upstream's Dockerfile only runs the Vite dev server. The backend CORS list is
   # hardcoded to localhost, so the dashboard and /api are served from the same origin.
   # Rate limit (nginx only): 5 per minute per IP, IPv6 grouped by /64, burst 5, on POST to
@@ -51,6 +52,7 @@ x-frontend-build: &frontend-build
     COPY apps/dashboard ./apps/dashboard
     WORKDIR /app/apps/dashboard
     ARG VITE_API_BASE_URL
+    ARG VITE_ENABLE_ACCOUNTS
     RUN test -n "$${VITE_API_BASE_URL}" && pnpm run build
 
     FROM nginx:$${WEEBLR_NGINX_VERSION}-trixie

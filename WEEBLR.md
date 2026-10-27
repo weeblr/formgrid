@@ -11,7 +11,7 @@ nginx in the `frontend` container serves the dashboard (with security headers: a
 
 ## Settings
 
-- `ENABLE_ACCOUNTS` (`true` or `false`, default `false`): account creation and deletion. When `false`, the signup and Settings pages return 403 from nginx, their API endpoints return 403, and their links are hidden. Only signing in is possible.
+- `ENABLE_ACCOUNTS` (`true` or `false`, default `false`): account creation and deletion. When `false`, the signup and Settings pages return 403 from nginx, their API endpoints return 403, and their links are hidden. Only signing in is possible. The dashboard reads it when it is built, so a change needs a redeploy.
 
 - `ENABLE_UPLOADS` (`true` or `false`, default `false`): file uploads on public forms. When not `true`, any request containing a file gets a 403 before anything is written; forms posted as `multipart/form-data` without files still work (8 KB per field, 100 fields). The upload code, the uploads volume and the `/uploads/` location stay in place.
 - `REDIS_PASSWORD` (required): Redis password, set on the Redis server and used by the backend and the queue worker.
@@ -41,15 +41,15 @@ Files that do not exist upstream, so upstream merges never touch them.
 
 - Account deletion API endpoint (`DELETE /api/user/me`), also deleting uploaded files: `packages/api/src/weeblr/account.routes.ts`
 - Email verification: signup creates an unverified account and emails a link; login refuses unverified accounts and resends the link (at most every 5 minutes): `packages/api/src/weeblr/auth.routes.ts`
-- `ENABLE_ACCOUNTS` flag and the public `GET /api/weeblr/config` endpoint exposing it, with the available form languages: `packages/api/src/weeblr/config.ts`
-- Dashboard hook loading that config: `apps/dashboard/src/lib/weeblrConfig.ts`
+- `ENABLE_ACCOUNTS` flag for the API: `packages/api/src/weeblr/config.ts`
+- Dashboard settings fixed at build time: `ENABLE_ACCOUNTS` and the form languages (the same list as the API's): `apps/dashboard/src/lib/weeblrConfig.ts`
 - Route guards: no public pages, account pages only when enabled: `apps/dashboard/src/components/WeeblrRoutes.tsx`
 - Signup page asking to check your email instead of logging in: `apps/dashboard/src/pages/WeeblrSignupPage.tsx`
 - Profile page with editable full name and website: `apps/dashboard/src/pages/dashboard/WeeblrProfilePage.tsx`
 - Settings page, only offering account deletion confirmed by typing the email address: `apps/dashboard/src/pages/dashboard/WeeblrSettingsPage.tsx`
 - Honeypot with a per-form field name (default `fax`), never stored, silent success when filled: `packages/api/src/weeblr/honeypot.ts`
 - Honeypot field name setting with the markup to add to the form: `apps/dashboard/src/components/WeeblrHoneypotField.tsx`
-- Form languages: texts for visitors and submission emails, one file per language with the same keys (an empty text falls back to English): `packages/api/src/weeblr/i18n/en.ts`, `packages/api/src/weeblr/i18n/fr.ts`, list of languages in `packages/api/src/weeblr/i18n/index.ts`
+- Form languages: texts for visitors and submission emails, one file per language with the same keys (an empty text falls back to English): `packages/api/src/weeblr/i18n/en.ts`, `packages/api/src/weeblr/i18n/fr.ts`, list of languages in `packages/api/src/weeblr/i18n/index.ts`, repeated in `apps/dashboard/src/lib/weeblrConfig.ts`
 - Per-form language, timezone, confirmation email and confirmation reply-to settings, with their validation and date formatting: `packages/api/src/weeblr/formSettings.ts`
 - Notification and confirmation emails in the form's language, all values escaped. The submitter's email is cleaned (spaces, stray punctuation and wrapping <> or quotes at either end) and kept only if it is then one valid address; otherwise no confirmation is sent and the notification says so. The notification shows submitted data first and replies go to the visitor; the confirmation holds no submitted data and replies go to the form's reply-to address, or `no-reply@` the domain of `EMAIL_FROM`: `packages/api/src/weeblr/emails.ts`
 - Success and error pages after a public submission, in the form's language (`/api/weeblr/submission/success` and `/error`): `packages/api/src/weeblr/submissionPages.ts`
@@ -123,13 +123,12 @@ Each change is tagged `[weeblr]` in a comment, so it can be found with a search 
 `packages/api/src/server.ts`
 
 - Fork-only routes: `packages/api/src/server.ts:24`
-- Behind a single reverse proxy (nginx), which sets X-Forwarded-For to the client IP: `packages/api/src/server.ts:36`
-- Email verification, mounted first to replace signup and pre-check login: `packages/api/src/server.ts:92`
-- Instance settings for the dashboard: `packages/api/src/server.ts:95`
-- Success and error pages in the form's language: `packages/api/src/server.ts:97`
-- Account deletion: `packages/api/src/server.ts:99`
-- The detail is logged above, not returned: `packages/api/src/server.ts:124`
-- Signed-in only: `packages/api/src/server.ts:189`
+- Behind a single reverse proxy (nginx), which sets X-Forwarded-For to the client IP: `packages/api/src/server.ts:35`
+- Email verification, mounted first to replace signup and pre-check login: `packages/api/src/server.ts:91`
+- Success and error pages in the form's language: `packages/api/src/server.ts:94`
+- Account deletion: `packages/api/src/server.ts:96`
+- The detail is logged above, not returned: `packages/api/src/server.ts:121`
+- Signed-in only: `packages/api/src/server.ts:186`
 
 `packages/api/src/submission/submission.controller.ts`
 

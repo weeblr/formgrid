@@ -24,10 +24,6 @@ export const WeeblrHomeRedirect: React.FC = () => {
 export const WeeblrAccountsRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const config = useWeeblrConfig()
 
-    if (!config) {
-        return null
-    }
-
     if (!config.enableAccounts) {
         return <WeeblrHomeRedirect />
     }

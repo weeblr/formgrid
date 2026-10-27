@@ -2,7 +2,8 @@ import { en, MessageKey, Messages } from './en';
 import { fr } from './fr';
 
 // [weeblr] Form languages. To add one: create its file with the same keys as en.ts,
-// then list it in LANGUAGES with the locale used to format dates.
+// then list it in LANGUAGES with the locale used to format dates, and in the dashboard's
+// apps/dashboard/src/lib/weeblrConfig.ts.
 
 export interface Language {
     code: string;

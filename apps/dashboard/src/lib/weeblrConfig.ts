@@ -1,7 +1,4 @@
-import { useEffect, useState } from 'react'
-import api from './api'
-
-// [weeblr] Instance settings served by GET /api/weeblr/config
+// [weeblr] Instance settings, fixed when the dashboard is built
 
 export interface WeeblrLanguage {
     code: string
@@ -11,57 +8,25 @@ export interface WeeblrLanguage {
 export interface WeeblrConfig {
     enableAccounts: boolean
     languages: WeeblrLanguage[]
-    defaultLanguage: string
-    defaultTimezone: string
-}
-
-const disabledConfig: WeeblrConfig = {
-    enableAccounts: false,
-    languages: [{ code: 'en', name: 'English' }],
-    defaultLanguage: 'en',
-    defaultTimezone: 'UTC',
-}
-
-let configPromise: Promise<WeeblrConfig> | null = null
-
-/**
- * Load the settings once per page load. Anything going wrong means accounts stay disabled.
- */
-const loadConfig = (): Promise<WeeblrConfig> => {
-    if (!configPromise) {
-        configPromise = api
-            .get('/api/weeblr/config')
-            .then((response) => {
-                const data = response.data?.data || {}
-                return {
-                    enableAccounts: data.enableAccounts === true,
-                    languages: Array.isArray(data.languages) && data.languages.length > 0 ? data.languages : disabledConfig.languages,
-                    defaultLanguage: typeof data.defaultLanguage === 'string' ? data.defaultLanguage : disabledConfig.defaultLanguage,
-                    defaultTimezone: typeof data.defaultTimezone === 'string' ? data.defaultTimezone : disabledConfig.defaultTimezone,
-                }
-            })
-            .catch(() => disabledConfig)
-    }
-    return configPromise
 }
 
 /**
- * Instance settings, null until loaded.
+ * Same list as LANGUAGES in packages/api/src/weeblr/i18n/index.ts: keep both in step.
  */
-export const useWeeblrConfig = (): WeeblrConfig | null => {
-    const [config, setConfig] = useState<WeeblrConfig | null>(null)
+const languages: WeeblrLanguage[] = [
+    { code: 'en', name: 'English' },
+    { code: 'fr', name: 'Français' },
+]
 
-    useEffect(() => {
-        let isMounted = true
-        loadConfig().then((loaded) => {
-            if (isMounted) {
-                setConfig(loaded)
-            }
-        })
-        return () => {
-            isMounted = false
-        }
-    }, [])
-
-    return config
+/**
+ * Account creation and deletion, from ENABLE_ACCOUNTS at build time.
+ */
+const config: WeeblrConfig = {
+    enableAccounts: (import.meta as any).env?.VITE_ENABLE_ACCOUNTS === 'true',
+    languages,
 }
+
+/**
+ * Instance settings.
+ */
+export const useWeeblrConfig = (): WeeblrConfig => config
