@@ -1,7 +1,8 @@
 import { MailerService, EmailTemplateData } from '../services/mailerService';
 import { env } from '../config/env';
-import { t } from './i18n';
+import { t, getLocale } from './i18n';
 import { formatFormDate, getConfirmationReplyTo, getFormLanguage } from './formSettings';
+import type { SpamVerdict } from './spamFiltering';
 
 // [weeblr] Submission emails in the form's language. Upstream's templates are English only
 // and insert submitted values as raw HTML; everything here is escaped.
@@ -82,13 +83,47 @@ interface SubmissionEmailInput {
     data: EmailTemplateData;
     settings: unknown;
     createdAt: Date | string;
+    spam?: SpamVerdict;
 }
+
+const formatScore = (score: number | undefined, language: string): string =>
+    typeof score === 'number' ? new Intl.NumberFormat(getLocale(language), { style: 'percent', maximumFractionDigits: 0 }).format(score) : '-';
+
+/**
+ * Spam filtering lines of the details section, empty when the form does not use it.
+ */
+const spamDetails = (language: string, spam: SpamVerdict | undefined): Array<[string, string]> => {
+    if (!spam) {
+        return [];
+    }
+    if (!spam.classified) {
+        return [[t(language, 'email.label.spam_check'), t(language, 'value.not_classified')]];
+    }
+    return [
+        [t(language, 'email.label.spam_score'), formatScore(spam.spamScore, language)],
+        [t(language, 'email.label.danger_score'), formatScore(spam.dangerScore, language)],
+    ];
+};
+
+/**
+ * Subject flags for a suspicious submission, such as "[Spam?] [Danger?] ".
+ */
+const subjectFlags = (language: string, spam: SpamVerdict | undefined): string => {
+    if (!spam?.classified || spam.band !== 'suspicious') {
+        return '';
+    }
+    const flags = [
+        ...(spam.suspiciousSpam ? [t(language, 'email.subject.flag_spam')] : []),
+        ...(spam.suspiciousDanger ? [t(language, 'email.subject.flag_danger')] : []),
+    ];
+    return flags.length > 0 ? `${flags.join(' ')} ` : '';
+};
 
 /**
  * Notification sent to the form owner: submitted data first, details below.
  * Reply-To is the visitor's address, so replying writes to them.
  */
-export const sendNotificationEmail = async (mailer: MailerService, to: string, { data, settings, createdAt }: SubmissionEmailInput): Promise<boolean> => {
+export const sendNotificationEmail = async (mailer: MailerService, to: string, { data, settings, createdAt, spam }: SubmissionEmailInput): Promise<boolean> => {
     const language = getFormLanguage(settings);
     const accent = ACCENTS.notification;
     const submittedAt = formatFormDate(createdAt, settings);
@@ -105,6 +140,7 @@ export const sendNotificationEmail = async (mailer: MailerService, to: string, {
         detailRow(t(language, 'email.label.submitted_at'), submittedAt),
         detailRow(t(language, 'email.label.submission_id'), data.submissionId),
         ...(data.ipAddress ? [detailRow(t(language, 'email.label.ip'), data.ipAddress)] : []),
+        ...spamDetails(language, spam).map(([label, value]) => detailRow(label, value)),
     ].join('');
 
     const body = `
@@ -128,13 +164,14 @@ export const sendNotificationEmail = async (mailer: MailerService, to: string, {
         `${t(language, 'email.label.submitted_at')}: ${submittedAt}`,
         `${t(language, 'email.label.submission_id')}: ${data.submissionId}`,
         ...(data.ipAddress ? [`${t(language, 'email.label.ip')}: ${data.ipAddress}`] : []),
+        ...spamDetails(language, spam).map(([label, value]) => `${label}: ${value}`),
         '',
         footer,
     ].join('\n');
 
     return mailer.sendEmail({
         to,
-        subject: t(language, 'email.notification.subject', { form: data.formName }),
+        subject: subjectFlags(language, spam) + t(language, 'email.notification.subject', { form: data.formName }),
         html: layout(language, accent, t(language, 'email.notification.heading'), body, footer),
         text,
         ...(replyTo && { replyTo }),

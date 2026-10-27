@@ -68,6 +68,11 @@ model Submission {
   ip          String?
   userAgent   String?
   status      String   @default("new") // new | read | responded
+
+  // [weeblr] Jev spam filtering: probability (0 to 1) that the submission is spam / dangerous, null when not classified
+  spamScore   Float?
+  dangerScore Float?
+
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 

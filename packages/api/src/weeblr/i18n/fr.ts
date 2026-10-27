@@ -34,6 +34,12 @@ export const fr: Messages = {
     'email.label.ip': 'Adresse IP',
     'email.label.field': 'Champ',
     'email.label.value': 'Valeur',
+    'email.label.spam_score': 'Score de spam',
+    'email.label.danger_score': 'Score de danger',
+    'email.label.spam_check': 'Contrôle anti-spam',
+
+    'email.subject.flag_spam': '[Spam ?]',
+    'email.subject.flag_danger': '[Danger ?]',
 
     'email.footer.automated': 'Ce message a été envoyé automatiquement. Merci de ne pas y répondre.',
     'email.footer.reply_to': 'Répondre à cet email enverra un message à l’adresse {email}.',
@@ -41,4 +47,5 @@ export const fr: Messages = {
     'value.empty': '-',
     'value.yes': 'Oui',
     'value.no': 'Non',
+    'value.not_classified': 'Non classé, le filtre anti-spam n’a pas pu être joint',
 };

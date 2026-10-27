@@ -33,6 +33,12 @@ export const en = {
     'email.label.ip': 'IP address',
     'email.label.field': 'Field',
     'email.label.value': 'Value',
+    'email.label.spam_score': 'Spam score',
+    'email.label.danger_score': 'Danger score',
+    'email.label.spam_check': 'Spam check',
+
+    'email.subject.flag_spam': '[Spam?]',
+    'email.subject.flag_danger': '[Danger?]',
 
     'email.footer.automated': 'This is an automated message. Please do not reply to this email.',
     'email.footer.reply_to': 'Replying to this email will send a message to {email}.',
@@ -40,6 +46,7 @@ export const en = {
     'value.empty': '-',
     'value.yes': 'Yes',
     'value.no': 'No',
+    'value.not_classified': 'Not classified, the spam filter could not be reached',
 };
 
 export type MessageKey = keyof typeof en;

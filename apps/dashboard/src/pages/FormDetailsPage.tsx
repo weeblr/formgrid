@@ -11,6 +11,8 @@ import { WeeblrHoneypotField } from '../components/WeeblrHoneypotField';
 import { WeeblrSubmissionSettings, readWeeblrSubmissionSettings, weeblrSubmissionSettingsChanged, isBuiltInSuccessUrl } from '../components/WeeblrSubmissionSettings';
 // [weeblr] Save all changes button at the bottom of each settings card
 import { WeeblrSaveAllButton } from '../components/WeeblrSaveAllButton';
+// [weeblr] Jev spam filtering settings and submission scores
+import { WeeblrSpamFiltering, WeeblrSubmissionScores, readWeeblrSpamFiltering, weeblrSpamFilteringChanged, weeblrSpamFilteringPayload, weeblrSpamFilteringErrors } from '../components/WeeblrSpamFiltering';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { tomorrow } from 'react-syntax-highlighter/dist/cjs/styles/prism';
 
@@ -90,6 +92,8 @@ export function FormDetailsPage() {
     const [weeblrSettings, setWeeblrSettings] = useState(() => readWeeblrSubmissionSettings(null));
     // [weeblr] Pending value of Enable Notifications; upstream changed the saved form instead, so it could never be saved
     const [notificationsEnabled, setNotificationsEnabled] = useState(false);
+    // [weeblr] Jev spam filtering settings
+    const [spamFiltering, setSpamFiltering] = useState(() => readWeeblrSpamFiltering(null));
     const [newEmail, setNewEmail] = useState('');
     const [redirectUrl, setRedirectUrl] = useState('');
     const [copiedStates, setCopiedStates] = useState<{ [key: string]: boolean }>({});
@@ -139,6 +143,8 @@ export function FormDetailsPage() {
             weeblrSubmissionSettingsChanged(weeblrSettings, form.settings) ||
             // [weeblr] Detect Enable Notifications changes
             notificationsEnabled !== (form.settings?.requireEmailNotification === true) ||
+            // [weeblr] Detect spam filtering changes
+            weeblrSpamFilteringChanged(spamFiltering, form.settings) ||
             spamProtection.enabled !== currentSpamProtection.enabled ||
             spamProtection.honeypot !== currentSpamProtection.honeypot ||
             spamProtection.rateLimit !== currentSpamProtection.rateLimit ||
@@ -150,7 +156,7 @@ export function FormDetailsPage() {
     // Update hasChanges when editData, notificationEmails, redirectUrl, or spamProtection change
     React.useEffect(() => {
         setHasChanges(checkForChanges());
-    }, [editData, form, notificationEmails, redirectUrl, spamProtection, weeblrSettings, notificationsEnabled]); // [weeblr] Re-check changes for the fork's settings and Enable Notifications
+    }, [editData, form, notificationEmails, redirectUrl, spamProtection, weeblrSettings, notificationsEnabled, spamFiltering]); // [weeblr] Re-check changes for the fork's settings, Enable Notifications and spam filtering
 
     // Function to fetch real form statistics
     const fetchFormStatistics = async (formId: string) => {
@@ -203,6 +209,8 @@ export function FormDetailsPage() {
                         setWeeblrSettings(readWeeblrSubmissionSettings(formData.settings));
                         // [weeblr] Load Enable Notifications
                         setNotificationsEnabled(formData.settings?.requireEmailNotification === true);
+                        // [weeblr] Load spam filtering settings
+                        setSpamFiltering(readWeeblrSpamFiltering(formData.settings));
 
                         // Initialize redirect URL from form settings
                         // [weeblr] A URL of the built-in page is shown as empty: the page now follows the form's language
@@ -276,6 +284,9 @@ export function FormDetailsPage() {
                 return 'bg-blue-100 text-blue-800';
             case 'responded':
                 return 'bg-gray-100 text-gray-800';
+            // [weeblr] Submissions held by spam filtering
+            case 'spam':
+                return 'bg-red-100 text-red-800';
             default:
                 return 'bg-gray-100 text-gray-800';
         }
@@ -423,6 +434,13 @@ export function FormDetailsPage() {
     const handleSave = async () => {
         if (!form || !hasChanges) return;
 
+        // [weeblr] Show what is wrong with the spam filtering settings instead of a generic save error
+        const spamFilteringErrors = weeblrSpamFilteringErrors(spamFiltering);
+        if (spamFilteringErrors.length > 0) {
+            setSaveError(spamFilteringErrors[0]);
+            return;
+        }
+
         setSaving(true);
         setSaveError(null);
 
@@ -436,6 +454,8 @@ export function FormDetailsPage() {
                     notificationEmail: notificationEmails.length > 0 ? notificationEmails.join(',') : undefined,
                     // [weeblr] Save Enable Notifications
                     requireEmailNotification: notificationsEnabled,
+                    // [weeblr] Save spam filtering settings
+                    spamFiltering: weeblrSpamFilteringPayload(spamFiltering),
                     redirectUrl: redirectUrl || undefined,
                     // [weeblr] Per-form submission settings
                     ...weeblrSettings,
@@ -1630,6 +1650,11 @@ form.addEventListener('submit', async (e) => {
                 <WeeblrSaveAllButton onSave={handleSave} hasChanges={hasChanges} saving={saving} error={saveError} />
             </div>
 
+            {/* [weeblr] Jev spam filtering */}
+            <WeeblrSpamFiltering value={spamFiltering} onChange={setSpamFiltering}>
+                <WeeblrSaveAllButton onSave={handleSave} hasChanges={hasChanges} saving={saving} error={saveError} />
+            </WeeblrSpamFiltering>
+
         </div>
     );
 
@@ -1743,6 +1768,9 @@ form.addEventListener('submit', async (e) => {
                                             <p className="text-sm text-gray-900">{formatSubmissionDate(selectedSubmission.createdAt)}</p>
                                         </div>
                                     </div>
+
+                                    {/* [weeblr] Spam and danger scores, when the submission was classified */}
+                                    <WeeblrSubmissionScores submission={selectedSubmission} />
 
                                     {/* Form Data */}
                                     <div>

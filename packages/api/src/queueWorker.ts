@@ -5,6 +5,8 @@ import { emailQueue, webhookQueue, JobType, closeQueues } from './queue/queueCon
 import { SendNotificationEmailJob } from './queue/jobs/sendNotificationEmailJob';
 import { DispatchWebhookJob } from './queue/jobs/dispatchWebhookJob';
 import { SendAutoReplyEmailJob } from './queue/jobs/sendAutoReplyEmailJob';
+// [weeblr] Jev spam filtering job
+import { WEEBLR_CLASSIFY_JOB, processClassificationJob } from './weeblr/spamFiltering';
 
 // Load environment variables
 config();
@@ -43,6 +45,12 @@ class QueueWorker {
         emailQueue.process(JobType.SEND_AUTO_REPLY_EMAIL, async (job) => {
             console.log(`📧 Processing auto-reply email job ${job.id}`);
             return this.autoReplyJobProcessor.process(job);
+        });
+
+        // [weeblr] Jev spam filtering, queues the notification and confirmation itself
+        emailQueue.process(WEEBLR_CLASSIFY_JOB, async (job) => {
+            console.log(`🛡️ Processing spam classification job ${job.id}`);
+            return processClassificationJob(job);
         });
 
         // Process webhook jobs

@@ -1,11 +1,13 @@
 import { z } from 'zod';
 import { DEFAULT_LANGUAGE, getLocale, isSupportedLanguage } from './i18n';
+import { spamFilteringSchema } from './spamFiltering';
 
 // [weeblr] Per-form settings added by the fork, stored in form.settings:
 // - language: language of everything visitors and the owner see about a submission
 // - timezone: IANA zone used for dates in emails
 // - sendAutoReply: email a confirmation to the submitter, off unless turned on
 // - confirmationReplyTo: Reply-To of those confirmations, a no-reply address when empty
+// - spamFiltering: optional Jev spam filtering, see spamFiltering.ts
 
 export const DEFAULT_TIMEZONE = 'UTC';
 
@@ -29,6 +31,7 @@ export const weeblrFormSettingsFields = {
     timezone: z.string().refine(isValidTimeZone, 'Unknown timezone').optional(),
     sendAutoReply: z.boolean().optional(),
     confirmationReplyTo: z.union([z.literal(''), z.string().email('Invalid reply-to address')]).optional(),
+    spamFiltering: spamFilteringSchema.optional(),
 };
 
 type SettingsLike = { language?: unknown; timezone?: unknown; sendAutoReply?: unknown; confirmationReplyTo?: unknown } | null | undefined;

@@ -7,6 +7,8 @@ import { SpamProtectionService, SpamProtectionConfig } from '../services/spamPro
 import { SubmissionNotFoundError } from './submission.errors';
 // [weeblr] Auto-reply only when turned on for the form
 import { isAutoReplyEnabled } from '../weeblr/formSettings';
+// [weeblr] Optional Jev spam filtering
+import { getSpamFiltering, addClassificationJob } from '../weeblr/spamFiltering';
 
 /**
  * Submission service for business logic operations
@@ -111,6 +113,10 @@ export class SubmissionService {
 
         // Queue email notification if enabled
         const settings = form.settings as FormSettings;
+        // [weeblr] With spam filtering, a classification job queues the notification and confirmation once Jev has answered
+        if (getSpamFiltering(settings)) {
+            await addClassificationJob(submissionInFieldOrder, form);
+        } else {
         if (settings?.requireEmailNotification && settings?.notificationEmail) {
             await this.queueEmailNotification(submissionInFieldOrder, form); // [weeblr] Notification gets the fields in submitted order
         }
@@ -119,6 +125,7 @@ export class SubmissionService {
         if (data.formData.email) {
             await this.queueAutoReplyEmail(submission, form);
         }
+        } // [weeblr] End of the branch without spam filtering
 
         // Queue webhook if configured
         if (settings?.webhookUrl) {

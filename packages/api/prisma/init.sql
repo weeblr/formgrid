@@ -63,6 +63,9 @@ CREATE TABLE IF NOT EXISTS `Submission` (
   `ip` VARCHAR(191) NULL,
   `userAgent` VARCHAR(191) NULL,
   `status` VARCHAR(191) NOT NULL DEFAULT 'new',
+  -- [weeblr] Jev spam filtering scores, null when not classified
+  `spamScore` DOUBLE NULL,
+  `dangerScore` DOUBLE NULL,
   `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
   `updatedAt` DATETIME(3) NOT NULL,
   PRIMARY KEY (`id`)

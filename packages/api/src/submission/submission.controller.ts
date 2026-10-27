@@ -320,6 +320,9 @@ export class SubmissionController {
                         name: submission.name,
                         email: submission.email,
                         status: submission.status,
+                        // [weeblr] Jev spam filtering scores, null when not classified
+                        spamScore: submission.spamScore,
+                        dangerScore: submission.dangerScore,
                         createdAt: submission.createdAt,
                         updatedAt: submission.updatedAt,
                     })),
@@ -382,6 +385,9 @@ export class SubmissionController {
                         name: submission.name,
                         email: submission.email,
                         status: submission.status,
+                        // [weeblr] Jev spam filtering scores, null when not classified
+                        spamScore: submission.spamScore,
+                        dangerScore: submission.dangerScore,
                         createdAt: submission.createdAt,
                         updatedAt: submission.updatedAt,
                     })),

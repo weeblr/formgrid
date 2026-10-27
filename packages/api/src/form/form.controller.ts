@@ -258,7 +258,7 @@ export class FormController {
                 data: {
                     name: form.name,
                     description: form.description,
-                    settings: form.settings,
+                    // [weeblr] No settings: they hold notification addresses, the honeypot field name and the Jev API key
                 },
             });
         } catch (error) {

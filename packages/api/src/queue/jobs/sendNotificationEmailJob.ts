@@ -38,7 +38,8 @@ export class SendNotificationEmailJob {
             };
 
             // [weeblr] Emails in the form's language, with escaped values
-            await sendNotificationEmail(this.mailerService, notificationEmail, { data: templateData, settings: formData.settings, createdAt: submissionData.createdAt });
+            // [weeblr] Spam filtering verdict, when the form uses it
+            await sendNotificationEmail(this.mailerService, notificationEmail, { data: templateData, settings: formData.settings, createdAt: submissionData.createdAt, spam: submissionData.weeblrSpam });
 
             console.log(`Email notification sent successfully for submission ${submissionId}`);
         } catch (error) {
