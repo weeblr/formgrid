@@ -36,6 +36,8 @@ x-frontend-build: &frontend-build
   # hardcoded to localhost, so the dashboard and /api are served from the same origin.
   # Rate limit (nginx only): 5 per minute per IP, IPv6 grouped by /64, burst 5, on POST to
   # login, password reset and the public submission routes; 429 when exceeded, logged.
+  # Security headers (CSP, framing, nosniff, referrer) on the dashboard locations only: the
+  # pages under /api/ set their own CSP, which a second policy would combine with and break.
   dockerfile_inline: |
     # syntax=docker/dockerfile:1
     ARG WEEBLR_NODE_VERSION=24
@@ -81,6 +83,7 @@ x-frontend-build: &frontend-build
         listen 80;
         root /usr/share/nginx/html;
         client_max_body_size 12m;
+        server_tokens off;
 
         if ($$wbl_origin_ok = 0) {
             return 403;
@@ -112,6 +115,7 @@ x-frontend-build: &frontend-build
         }
 
         location ~ ^/(signup|dashboard/settings)/?$$ {
+            include /etc/nginx/wbl-dashboard-headers.conf;
             if ($$wbl_accounts_enabled = 0) {
                 return 403;
             }
@@ -119,9 +123,16 @@ x-frontend-build: &frontend-build
         }
 
         location / {
+            include /etc/nginx/wbl-dashboard-headers.conf;
             try_files $$uri $$uri/ /index.html;
         }
     }
+    EOF
+    COPY <<'EOF' /etc/nginx/wbl-dashboard-headers.conf
+    add_header Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'self'; object-src 'none'" always;
+    add_header X-Frame-Options DENY always;
+    add_header X-Content-Type-Options nosniff always;
+    add_header Referrer-Policy same-origin always;
     EOF
     COPY --from=builder /app/apps/dashboard/dist /usr/share/nginx/html
 

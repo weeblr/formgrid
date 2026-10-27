@@ -7,7 +7,7 @@ Dokploy deploys the `weeblr` branch with a custom compose file:
 
 It only exists in this fork, so upstream merges never touch it.
 
-nginx in the `frontend` container serves the dashboard, forwards `/api/` to the backend (rate-limiting POSTs to login, password reset and the public submission routes to 5 per minute per IP, IPv6 grouped by /64, burst 5, 429 beyond), and serves uploaded files under `/uploads/` straight from the uploads volume (read-only, sandboxed so an uploaded HTML file cannot run as part of the site). The backend's own `/uploads` route reads a different folder and is not used.
+nginx in the `frontend` container serves the dashboard (with security headers: a strict Content-Security-Policy, no framing, nosniff, same-origin referrer; not on `/api/`, whose pages set their own policy), forwards `/api/` to the backend (rate-limiting POSTs to login, password reset and the public submission routes to 5 per minute per IP, IPv6 grouped by /64, burst 5, 429 beyond), and serves uploaded files under `/uploads/` straight from the uploads volume (read-only, sandboxed so an uploaded HTML file cannot run as part of the site). The backend's own `/uploads` route reads a different folder and is not used.
 
 ## Settings
 
