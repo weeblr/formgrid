@@ -78,7 +78,7 @@ services:
       - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
       - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
       - EMAIL_FROM=${EMAIL_FROM}
-      - APP_URL=${BACKEND_APP_URL}
+      - APP_URL=${FRONTEND_APP_URL}
       # File Storage Configuration
       - FILE_STORAGE_TYPE=local  # Options: local, s3, gcs, minio
       - UPLOAD_PATH=/app/uploads
@@ -92,13 +92,50 @@ services:
   frontend:
     build:
       context: ..
-      dockerfile: apps/dashboard/Dockerfile
       args:
-        - VITE_API_BASE_URL=${FRONTEND_APP_URL}
+        WEEBLR_NODE_VERSION: ${WEEBLR_NODE_VERSION:-24}
+        WEEBLR_NGINX_VERSION: ${WEEBLR_NGINX_VERSION:-1.30}
+        VITE_API_BASE_URL: ${FRONTEND_APP_URL}
+      # Upstream's Dockerfile only runs the Vite dev server. The backend CORS list is
+      # hardcoded to localhost, so the dashboard and /api are served from the same origin.
+      dockerfile_inline: |
+        # syntax=docker/dockerfile:1
+        ARG WEEBLR_NODE_VERSION=24
+        ARG WEEBLR_NGINX_VERSION=1.30
+        FROM node:$${WEEBLR_NODE_VERSION}-trixie-slim AS builder
+        RUN corepack enable && corepack prepare pnpm@8.15.0 --activate
+        WORKDIR /app
+        COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+        COPY apps/dashboard/package.json ./apps/dashboard/
+        RUN pnpm install --frozen-lockfile --filter @formgrid/dashboard
+        COPY apps/dashboard ./apps/dashboard
+        WORKDIR /app/apps/dashboard
+        ARG VITE_API_BASE_URL
+        RUN test -n "$${VITE_API_BASE_URL}" && pnpm run build
+
+        FROM nginx:$${WEEBLR_NGINX_VERSION}-trixie
+        COPY <<'EOF' /etc/nginx/conf.d/default.conf
+        server {
+            listen 80;
+            root /usr/share/nginx/html;
+            client_max_body_size 12m;
+
+            location /api/ {
+                proxy_pass http://backend:4000;
+                proxy_set_header Host $$host;
+                proxy_set_header X-Real-IP $$remote_addr;
+                proxy_set_header X-Forwarded-For $$proxy_add_x_forwarded_for;
+                proxy_set_header X-Forwarded-Proto $$scheme;
+            }
+
+            location / {
+                try_files $$uri $$uri/ /index.html;
+            }
+        }
+        EOF
+        COPY --from=builder /app/apps/dashboard/dist /usr/share/nginx/html
     container_name: formgrid-frontend
     restart: unless-stopped
-    environment:
-      - VITE_API_BASE_URL=${FRONTEND_APP_URL}
     depends_on:
       - backend
 
