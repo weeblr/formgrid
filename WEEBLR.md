@@ -89,8 +89,12 @@ Each change is tagged `[weeblr]` in a comment, so it can be found with a search 
 - Save the honeypot field name, empty meaning the default: `apps/dashboard/src/pages/FormDetailsPage.tsx:431`
 - Allow Multiple Submissions toggle in a Submission Settings card: `apps/dashboard/src/pages/FormDetailsPage.tsx:1465`
 - Success redirect URL placeholder is our own success page: `apps/dashboard/src/pages/FormDetailsPage.tsx:1495`
-- Show the honeypot field name setting: `apps/dashboard/src/pages/FormDetailsPage.tsx:1577`
-- View uploaded files from the real uploads URL: `apps/dashboard/src/pages/FormDetailsPage.tsx:1781`
-- Download uploaded files from the real uploads URL: `apps/dashboard/src/pages/FormDetailsPage.tsx:1792`
+- Hide the Enable CAPTCHA toggle (no reCAPTCHA key configured, and upstream drops the token): `apps/dashboard/src/pages/FormDetailsPage.tsx:1516`
+- Hide the Allowed Domains (CORS) field, never saved nor used: `apps/dashboard/src/pages/FormDetailsPage.tsx:1548`
+- Hide the CAPTCHA tip in Security Best Practices: `apps/dashboard/src/pages/FormDetailsPage.tsx:1621`
+- Hide the CORS tip in Security Best Practices: `apps/dashboard/src/pages/FormDetailsPage.tsx:1624`
+- Show the honeypot field name setting: `apps/dashboard/src/pages/FormDetailsPage.tsx:1583`
+- View uploaded files from the real uploads URL: `apps/dashboard/src/pages/FormDetailsPage.tsx:1789`
+- Download uploaded files from the real uploads URL: `apps/dashboard/src/pages/FormDetailsPage.tsx:1800`
 - Add the missing `/api` prefix to the profile request (page no longer routed): `apps/dashboard/src/pages/dashboard/ProfilePage.tsx:28`
 - Read the profile from the API's `data` field (page no longer routed): `apps/dashboard/src/pages/dashboard/ProfilePage.tsx:30`

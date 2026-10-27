@@ -1513,6 +1513,8 @@ form.addEventListener('submit', async (e) => {
                 <h3 className="text-lg font-medium text-gray-900 mb-4">Security Settings</h3>
                 <div className="space-y-6">
                     {/* CAPTCHA Toggle - Master switch for all spam protection */}
+                    {/* [weeblr] Hidden: needs a reCAPTCHA key this instance does not set, and upstream drops the token before checking it */}
+                    {false && (
                     <div className="flex items-center justify-between">
                         <div>
                             <div className="text-sm font-medium text-gray-900">Enable CAPTCHA</div>
@@ -1541,7 +1543,10 @@ form.addEventListener('submit', async (e) => {
                             <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-gray-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-gray-900"></div>
                         </label>
                     </div>
+                    )}
 
+                    {/* [weeblr] Hidden: this field is never saved nor used */}
+                    {false && (
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">Allowed Domains (CORS)</label>
                         <input
@@ -1551,6 +1556,7 @@ form.addEventListener('submit', async (e) => {
                         />
                         <p className="mt-1 text-sm text-gray-500">Comma-separated list of allowed domains</p>
                     </div>
+                    )}
 
                     {/* Honeypot Setting */}
                     <div className="flex items-center justify-between">
@@ -1612,9 +1618,11 @@ form.addEventListener('submit', async (e) => {
                                 <h3 className="text-sm font-medium text-yellow-800">Security Best Practices</h3>
                                 <div className="mt-2 text-sm text-yellow-700">
                                     <ul className="list-disc pl-5 space-y-1">
-                                        <li>Enable CAPTCHA for public forms</li>
+                                        {/* [weeblr] CAPTCHA toggle is hidden */}
+                                        {false && <li>Enable CAPTCHA for public forms</li>}
                                         <li>Set appropriate rate limits based on expected traffic</li>
-                                        <li>Configure CORS to restrict access to your domains only</li>
+                                        {/* [weeblr] CORS field is hidden */}
+                                        {false && <li>Configure CORS to restrict access to your domains only</li>}
                                     </ul>
                                 </div>
                             </div>
