@@ -51,6 +51,8 @@ x-frontend-build: &frontend-build
 
     FROM nginx:$${WEEBLR_NGINX_VERSION}-trixie
     COPY <<'EOF' /etc/nginx/templates/default.conf.template
+    map_hash_bucket_size 256;
+
     map $$http_wbl_origin_auth $$wbl_origin_ok {
         default 0;
         "$${WBL_ORIGIN_AUTH}" 1;
