@@ -5,6 +5,8 @@ import { useForms } from '../hooks/useForms';
 import { useAuth } from '../context/AuthContext';
 import { useSubmissions, Submission } from '../hooks/useSubmissions';
 import api from '../lib/api';
+// [weeblr] Per-form honeypot field name
+import { WeeblrHoneypotField } from '../components/WeeblrHoneypotField';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { tomorrow } from 'react-syntax-highlighter/dist/cjs/styles/prism';
 
@@ -29,6 +31,8 @@ interface ApiForm {
             enabled: boolean;
             honeypot: boolean;
             rateLimit: number;
+            // [weeblr] Per-form honeypot field name
+            honeypotField?: string;
         };
         webhookUrl?: string;
         webhookSecret?: string;
@@ -62,7 +66,8 @@ export function FormDetailsPage() {
     const [searchParams, setSearchParams] = useSearchParams();
     const { getFormById, updateForm } = useForms();
     const { user } = useAuth();
-    const [activeTab, setActiveTab] = useState('overview');
+    // [weeblr] Open a given tab with ?tab=, used by the Edit icon of the forms list
+    const [activeTab, setActiveTab] = useState(() => tabs.some(tab => tab.id === searchParams.get('tab')) ? searchParams.get('tab') as string : 'overview');
     const [form, setForm] = useState<Form | null>(null);
     const [statistics, setStatistics] = useState<FormStatistics | null>(null);
     const [editData, setEditData] = useState({
@@ -77,6 +82,8 @@ export function FormDetailsPage() {
     const [selectedSubmissions, setSelectedSubmissions] = useState<Set<string>>(new Set());
     const [isAllSelected, setIsAllSelected] = useState(false);
     const [notificationEmails, setNotificationEmails] = useState<string[]>([]);
+    // [weeblr] Allow multiple submissions, allowed unless explicitly turned off
+    const [allowMultipleSubmissions, setAllowMultipleSubmissions] = useState(true);
     const [newEmail, setNewEmail] = useState('');
     const [redirectUrl, setRedirectUrl] = useState('');
     const [copiedStates, setCopiedStates] = useState<{ [key: string]: boolean }>({});
@@ -88,7 +95,9 @@ export function FormDetailsPage() {
     const [spamProtection, setSpamProtection] = useState({
         enabled: false,    // Master spam protection toggle
         honeypot: false,   // Honeypot field protection
-        rateLimit: 10      // Rate limiting (submissions per minute)
+        rateLimit: 10,     // Rate limiting (submissions per minute)
+        // [weeblr] Per-form honeypot field name, empty means the default
+        honeypotField: ''
     });
 
     // Pagination state for submissions
@@ -120,16 +129,20 @@ export function FormDetailsPage() {
             editData.isActive !== form.isActive ||
             JSON.stringify(notificationEmails.sort()) !== JSON.stringify(currentEmails.sort()) ||
             redirectUrl !== (form.settings?.redirectUrl || '') ||
+            // [weeblr] Allow multiple submissions
+            allowMultipleSubmissions !== (form.settings?.allowMultipleSubmissions !== false) ||
             spamProtection.enabled !== currentSpamProtection.enabled ||
             spamProtection.honeypot !== currentSpamProtection.honeypot ||
-            spamProtection.rateLimit !== currentSpamProtection.rateLimit
+            spamProtection.rateLimit !== currentSpamProtection.rateLimit ||
+            // [weeblr] Per-form honeypot field name
+            spamProtection.honeypotField.trim() !== (currentSpamProtection.honeypotField || '')
         );
     };
 
     // Update hasChanges when editData, notificationEmails, redirectUrl, or spamProtection change
     React.useEffect(() => {
         setHasChanges(checkForChanges());
-    }, [editData, form, notificationEmails, redirectUrl, spamProtection]);
+    }, [editData, form, notificationEmails, redirectUrl, spamProtection, allowMultipleSubmissions]); // [weeblr] allowMultipleSubmissions
 
     // Function to fetch real form statistics
     const fetchFormStatistics = async (formId: string) => {
@@ -157,7 +170,8 @@ export function FormDetailsPage() {
                         setForm({
                             ...formData,
                             settings: formData.settings || {
-                                allowMultipleSubmissions: false,
+                                // [weeblr] Multiple submissions allowed by default
+                                allowMultipleSubmissions: true,
                                 requireEmailNotification: false
                             }
                         });
@@ -177,6 +191,9 @@ export function FormDetailsPage() {
                             setNotificationEmails(defaultEmails);
                         }
 
+                        // [weeblr] Allow multiple submissions, allowed unless explicitly turned off
+                        setAllowMultipleSubmissions(formData.settings?.allowMultipleSubmissions !== false);
+
                         // Initialize redirect URL from form settings
                         if (formData.settings?.redirectUrl) {
                             setRedirectUrl(formData.settings.redirectUrl);
@@ -191,14 +208,17 @@ export function FormDetailsPage() {
                         if (formData.settings?.spamProtection) {
                             // Load existing spam protection settings
                             console.log('Loading existing spam protection settings:', formData.settings.spamProtection);
-                            setSpamProtection(formData.settings.spamProtection);
+                            // [weeblr] Older forms have no honeypot field name
+                            setSpamProtection({ ...formData.settings.spamProtection, honeypotField: formData.settings.spamProtection.honeypotField || '' });
                         } else {
                             // Set default spam protection settings if none exist
                             console.log('Setting default spam protection settings');
                             setSpamProtection({
                                 enabled: false,    // CAPTCHA disabled by default
                                 honeypot: false,   // Honeypot disabled by default
-                                rateLimit: 10      // Default rate limit: 10 submissions per minute
+                                rateLimit: 10,     // Default rate limit: 10 submissions per minute
+                                // [weeblr] Per-form honeypot field name, empty means the default
+                                honeypotField: ''
                             });
                         }
                         // Fetch real statistics
@@ -404,9 +424,12 @@ export function FormDetailsPage() {
                     ...form.settings,
                     notificationEmail: notificationEmails.length > 0 ? notificationEmails.join(',') : undefined,
                     redirectUrl: redirectUrl || undefined,
+                    // [weeblr] Allow multiple submissions
+                    allowMultipleSubmissions,
                     // Save spam protection settings to backend
                     // This is what the backend uses to determine which security checks to run
-                    spamProtection: spamProtection,
+                    // [weeblr] An empty honeypot field name is not saved, the default applies
+                    spamProtection: { ...spamProtection, honeypotField: spamProtection.honeypotField.trim() || undefined },
                 }
             };
 
@@ -1439,6 +1462,26 @@ form.addEventListener('submit', async (e) => {
                 </div>
             </div>
 
+            {/* [weeblr] Submission settings */}
+            <div className="bg-white shadow-sm rounded-lg border border-gray-200 p-6">
+                <h3 className="text-lg font-medium text-gray-900 mb-4">Submission Settings</h3>
+                <div className="flex items-center justify-between">
+                    <div>
+                        <div className="text-sm font-medium text-gray-900">Allow Multiple Submissions</div>
+                        <div className="text-sm text-gray-500">When off, a visitor (IP address) can only submit once per hour.</div>
+                    </div>
+                    <label className="relative inline-flex items-center cursor-pointer">
+                        <input
+                            type="checkbox"
+                            checked={allowMultipleSubmissions}
+                            onChange={(e) => setAllowMultipleSubmissions(e.target.checked)}
+                            className="sr-only peer"
+                        />
+                        <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-gray-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-gray-900"></div>
+                    </label>
+                </div>
+            </div>
+
             {/* Redirect Settings */}
             <div className="bg-white shadow-sm rounded-lg border border-gray-200 p-6">
                 <h3 className="text-lg font-medium text-gray-900 mb-4">Redirect Settings</h3>
@@ -1530,6 +1573,14 @@ form.addEventListener('submit', async (e) => {
                             <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-gray-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-gray-900"></div>
                         </label>
                     </div>
+
+                    {/* [weeblr] Per-form honeypot field name */}
+                    {spamProtection.honeypot && (
+                        <WeeblrHoneypotField
+                            value={spamProtection.honeypotField}
+                            onChange={(honeypotField) => setSpamProtection(prev => ({ ...prev, honeypotField }))}
+                        />
+                    )}
 
                     {/* Rate Limiting */}
                     <div>

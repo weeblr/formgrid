@@ -25,11 +25,15 @@ Files that do not exist upstream, so upstream merges never touch them.
 - Signup page asking to check your email instead of logging in: `apps/dashboard/src/pages/WeeblrSignupPage.tsx`
 - Profile page with editable full name and website: `apps/dashboard/src/pages/dashboard/WeeblrProfilePage.tsx`
 - Settings page, only offering account deletion confirmed by typing the email address: `apps/dashboard/src/pages/dashboard/WeeblrSettingsPage.tsx`
+- Honeypot with a per-form field name (default `fax`), never stored, silent success when filled: `packages/api/src/weeblr/honeypot.ts`
+- Honeypot field name setting with the markup to add to the form: `apps/dashboard/src/components/WeeblrHoneypotField.tsx`
 - Public form submission success and error pages: `apps/dashboard/public/submission-success.html`, `apps/dashboard/public/submission-error.html`
 
 ## Changes to upstream code
 
 Each change is tagged `[weeblr]` in a comment, so it can be found with a search after an upstream merge.
+
+### Backend
 
 - Add the `verificationToken` and `verificationTokenExpires` fields that the auth code uses: `packages/api/prisma/schema.prisma:16`
 - Import the fork-only routes: `packages/api/src/server.ts:24`
@@ -38,9 +42,21 @@ Each change is tagged `[weeblr]` in a comment, so it can be found with a search 
 - Mount the instance settings route: `packages/api/src/server.ts:94`
 - Mount the fork-only account routes: `packages/api/src/server.ts:96`
 - Import `env` for the submission redirects: `packages/api/src/submission/submission.controller.ts:11`
-- Redirect to our success page after a public submission: `packages/api/src/submission/submission.controller.ts:158`
-- Redirect to our error page after a failed public submission: `packages/api/src/submission/submission.controller.ts:180`
-- Redirect to our success page after a silently rate-limited submission: `packages/api/src/submission/submission.controller.ts:620`
+- Import the honeypot helpers: `packages/api/src/submission/submission.controller.ts:13`
+- Honeypot check with the form's field name, silent success when caught: `packages/api/src/submission/submission.controller.ts:69`
+- Redirect to our success page after a public submission: `packages/api/src/submission/submission.controller.ts:166`
+- Redirect to our error page after a failed public submission: `packages/api/src/submission/submission.controller.ts:188`
+- Redirect to our success page after a silently rate-limited submission: `packages/api/src/submission/submission.controller.ts:628`
+- Multiple submissions allowed unless explicitly turned off: `packages/api/src/submission/submission.service.ts:297`
+- Import the honeypot field name pattern: `packages/api/src/submission/submission.validation.ts:2`
+- Multiple submissions allowed by default: `packages/api/src/submission/submission.validation.ts:27`
+- Accept a honeypot field name in form settings: `packages/api/src/submission/submission.validation.ts:40`
+- Import the honeypot field name pattern: `packages/api/src/form/form.validation.ts:2`
+- Multiple submissions allowed by default when saving a form: `packages/api/src/form/form.validation.ts:11`
+- Accept a honeypot field name when saving a form: `packages/api/src/form/form.validation.ts:22`
+
+### Dashboard
+
 - Use the fork-only signup page: `apps/dashboard/src/App.tsx:6`
 - Use the fork-only Profile and Settings pages: `apps/dashboard/src/App.tsx:16`
 - Import the route guards: `apps/dashboard/src/App.tsx:19`
@@ -52,12 +68,29 @@ Each change is tagged `[weeblr]` in a comment, so it can be found with a search 
 - Show Settings in the sidebar only when accounts are enabled: `apps/dashboard/src/components/dashboard/DashboardSidebar.tsx:4`
 - Add Settings to the dashboard sidebar: `apps/dashboard/src/components/dashboard/DashboardSidebar.tsx:15`
 - Show Settings in the avatar menu only when accounts are enabled: `apps/dashboard/src/components/dashboard/UserAvatarDropdown.tsx:5`
-- Default success redirect URL is our own success page: `apps/dashboard/src/pages/FormDetailsPage.tsx:185`
-- Show the real form endpoint URL: `apps/dashboard/src/pages/FormDetailsPage.tsx:221`
-- Success redirect URL placeholder is our own success page: `apps/dashboard/src/pages/FormDetailsPage.tsx:1452`
-- View uploaded files from the real uploads URL: `apps/dashboard/src/pages/FormDetailsPage.tsx:1730`
-- Download uploaded files from the real uploads URL: `apps/dashboard/src/pages/FormDetailsPage.tsx:1741`
 - Import the API client for form endpoint URLs: `apps/dashboard/src/pages/FormsPage.tsx:7`
 - Show the real form endpoint URL in the forms list: `apps/dashboard/src/pages/FormsPage.tsx:52`
+- Edit icon opens the form's Settings tab instead of the abandoned `/edit` page: `apps/dashboard/src/pages/FormsPage.tsx:227`
+- Import the honeypot field name setting: `apps/dashboard/src/pages/FormDetailsPage.tsx:8`
+- Honeypot field name in the form settings type: `apps/dashboard/src/pages/FormDetailsPage.tsx:34`
+- Open a given tab with `?tab=`: `apps/dashboard/src/pages/FormDetailsPage.tsx:69`
+- Allow multiple submissions state: `apps/dashboard/src/pages/FormDetailsPage.tsx:85`
+- Honeypot field name in the initial spam settings: `apps/dashboard/src/pages/FormDetailsPage.tsx:99`
+- Detect allow multiple submissions changes: `apps/dashboard/src/pages/FormDetailsPage.tsx:132`
+- Detect honeypot field name changes: `apps/dashboard/src/pages/FormDetailsPage.tsx:137`
+- Re-check changes when allow multiple submissions changes: `apps/dashboard/src/pages/FormDetailsPage.tsx:145`
+- Multiple submissions allowed for forms without settings: `apps/dashboard/src/pages/FormDetailsPage.tsx:173`
+- Load allow multiple submissions: `apps/dashboard/src/pages/FormDetailsPage.tsx:194`
+- Default success redirect URL is our own success page: `apps/dashboard/src/pages/FormDetailsPage.tsx:202`
+- Load the honeypot field name of existing forms: `apps/dashboard/src/pages/FormDetailsPage.tsx:211`
+- Honeypot field name in the default spam settings: `apps/dashboard/src/pages/FormDetailsPage.tsx:220`
+- Show the real form endpoint URL: `apps/dashboard/src/pages/FormDetailsPage.tsx:241`
+- Save allow multiple submissions: `apps/dashboard/src/pages/FormDetailsPage.tsx:427`
+- Save the honeypot field name, empty meaning the default: `apps/dashboard/src/pages/FormDetailsPage.tsx:431`
+- Allow Multiple Submissions toggle in a Submission Settings card: `apps/dashboard/src/pages/FormDetailsPage.tsx:1465`
+- Success redirect URL placeholder is our own success page: `apps/dashboard/src/pages/FormDetailsPage.tsx:1495`
+- Show the honeypot field name setting: `apps/dashboard/src/pages/FormDetailsPage.tsx:1577`
+- View uploaded files from the real uploads URL: `apps/dashboard/src/pages/FormDetailsPage.tsx:1781`
+- Download uploaded files from the real uploads URL: `apps/dashboard/src/pages/FormDetailsPage.tsx:1792`
 - Add the missing `/api` prefix to the profile request (page no longer routed): `apps/dashboard/src/pages/dashboard/ProfilePage.tsx:28`
 - Read the profile from the API's `data` field (page no longer routed): `apps/dashboard/src/pages/dashboard/ProfilePage.tsx:30`

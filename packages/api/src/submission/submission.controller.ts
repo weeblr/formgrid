@@ -10,6 +10,8 @@ import { AuthRequest } from '../presentation/middleware/auth';
 import { SubmissionNotFoundError } from './submission.errors';
 // [weeblr] Needed for our own success and error pages
 import { env } from '../config/env';
+// [weeblr] Honeypot with a per-form field name
+import { getHoneypotField, takeHoneypot } from '../weeblr/honeypot';
 
 /**
  * Submission controller for handling HTTP requests
@@ -60,6 +62,12 @@ export class SubmissionController {
 
             // Per-form limit (Security tab). Silent 200 so bots are not told they were blocked.
             if (!checkFormSubmissionRateLimit(form.id, clientIp, spamProtection.rateLimit)) {
+                this.respondWithSilentRateLimit(req, res, form.settings as FormSettings | null);
+                return;
+            }
+
+            // [weeblr] Honeypot: the field is never stored; caught bots get the same silent success as rate limiting
+            if (spamProtection.honeypot && takeHoneypot(req.body, getHoneypotField((form.settings as FormSettings | null)?.spamProtection))) {
                 this.respondWithSilentRateLimit(req, res, form.settings as FormSettings | null);
                 return;
             }

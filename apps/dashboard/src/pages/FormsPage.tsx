@@ -224,7 +224,8 @@ export function FormsPage() {
                                             <button
                                                 onClick={(e) => {
                                                     e.stopPropagation();
-                                                    navigate(`/dashboard/forms/${form.id}/edit`);
+                                                    // [weeblr] The /edit page is an abandoned draft that wipes settings, open the form's Settings tab instead
+                                                    navigate(`/dashboard/forms/${form.id}?tab=settings`);
                                                 }}
                                                 className="text-gray-400 hover:text-gray-600 transition-colors"
                                                 title="Edit Form"

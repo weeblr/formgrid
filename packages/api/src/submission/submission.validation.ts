@@ -1,4 +1,6 @@
 import { z } from 'zod';
+// [weeblr] Per-form honeypot field name
+import { HONEYPOT_FIELD_PATTERN } from '../weeblr/honeypot';
 
 /**
  * Validation schemas for submission endpoints
@@ -22,7 +24,8 @@ export const formFieldSchema = z.object({
 
 // Form settings validation schema
 export const formSettingsSchema = z.object({
-    allowMultipleSubmissions: z.boolean().default(false),
+    // [weeblr] Multiple submissions allowed by default
+    allowMultipleSubmissions: z.boolean().default(true),
     requireEmailNotification: z.boolean().default(false),
     notificationEmail: z.string().email().optional(),
     redirectUrl: z.string().url().optional(),
@@ -34,6 +37,8 @@ export const formSettingsSchema = z.object({
         enabled: z.boolean().default(true),
         honeypot: z.boolean().default(true),
         rateLimit: z.number().default(10), // submissions per minute
+        // [weeblr] Per-form honeypot field name
+        honeypotField: z.string().regex(HONEYPOT_FIELD_PATTERN, 'Honeypot field name must start with a letter and contain only letters, digits, _ or -').optional(),
     }).optional(),
     fields: z.array(formFieldSchema).optional(),
 });

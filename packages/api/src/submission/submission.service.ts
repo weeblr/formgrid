@@ -294,7 +294,8 @@ export class SubmissionService {
      * @returns boolean - True if multiple submissions are allowed
      */
     private allowMultipleSubmissions(settings?: FormSettings): boolean {
-        return settings?.allowMultipleSubmissions || false;
+        // [weeblr] Allowed unless explicitly turned off
+        return settings?.allowMultipleSubmissions !== false;
     }
 
     /**
