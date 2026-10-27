@@ -9,6 +9,8 @@ import api from '../lib/api';
 import { WeeblrHoneypotField } from '../components/WeeblrHoneypotField';
 // [weeblr] Per-form submission settings: multiple submissions, language, timezone, confirmation email
 import { WeeblrSubmissionSettings, readWeeblrSubmissionSettings, weeblrSubmissionSettingsChanged, isBuiltInSuccessUrl } from '../components/WeeblrSubmissionSettings';
+// [weeblr] Save all changes button at the bottom of each settings card
+import { WeeblrSaveAllButton } from '../components/WeeblrSaveAllButton';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { tomorrow } from 'react-syntax-highlighter/dist/cjs/styles/prism';
 
@@ -1347,7 +1349,8 @@ form.addEventListener('submit', async (e) => {
                                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                                 </svg>
                             )}
-                            {saving ? 'Saving...' : 'Save Changes'}
+                            {/* [weeblr] Every save button saves the whole page */}
+                            {saving ? 'Saving...' : 'Save all changes'}
                         </button>
                         <button
                             onClick={handleCancel}
@@ -1464,10 +1467,15 @@ form.addEventListener('submit', async (e) => {
                         </div>
                     </div>
                 </div>
+                {/* [weeblr] Save all changes from this card too */}
+                <WeeblrSaveAllButton onSave={handleSave} hasChanges={hasChanges} saving={saving} error={saveError} />
             </div>
 
             {/* [weeblr] Per-form submission settings: multiple submissions, language, timezone, confirmation email */}
-            <WeeblrSubmissionSettings value={weeblrSettings} onChange={setWeeblrSettings} />
+            <WeeblrSubmissionSettings value={weeblrSettings} onChange={setWeeblrSettings}>
+                {/* [weeblr] Save all changes from this card too */}
+                <WeeblrSaveAllButton onSave={handleSave} hasChanges={hasChanges} saving={saving} error={saveError} />
+            </WeeblrSubmissionSettings>
 
             {/* Redirect Settings */}
             <div className="bg-white shadow-sm rounded-lg border border-gray-200 p-6">
@@ -1493,6 +1501,8 @@ form.addEventListener('submit', async (e) => {
                         </p>
                     </div>
                 </div>
+                {/* [weeblr] Save all changes from this card too */}
+                <WeeblrSaveAllButton onSave={handleSave} hasChanges={hasChanges} saving={saving} error={saveError} />
             </div>
 
             {/* Security Settings */}
@@ -1616,6 +1626,8 @@ form.addEventListener('submit', async (e) => {
                         </div>
                     </div>
                 </div>
+                {/* [weeblr] Save all changes from this card too */}
+                <WeeblrSaveAllButton onSave={handleSave} hasChanges={hasChanges} saving={saving} error={saveError} />
             </div>
 
         </div>

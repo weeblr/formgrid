@@ -32,6 +32,7 @@ Files that do not exist upstream, so upstream merges never touch them.
 - Notification and confirmation emails in the form's language, all values escaped. The notification shows submitted data first and replies go to the visitor; the confirmation holds no submitted data and replies go to the form's reply-to address, or `no-reply@` the domain of `EMAIL_FROM`: `packages/api/src/weeblr/emails.ts`
 - Success and error pages after a public submission, in the form's language (`/api/weeblr/submission/success` and `/error`): `packages/api/src/weeblr/submissionPages.ts`
 - Submission settings card (language, timezone, confirmation email and its reply-to address, multiple submissions): `apps/dashboard/src/components/WeeblrSubmissionSettings.tsx`
+- "Save all changes" button repeated at the bottom of each form settings card: `apps/dashboard/src/components/WeeblrSaveAllButton.tsx`
 
 ## Changes to upstream code
 
@@ -125,37 +126,43 @@ Each change is tagged `[weeblr]` in a comment, so it can be found with a search 
 
 - Per-form honeypot field name: `apps/dashboard/src/pages/FormDetailsPage.tsx:8`
 - Per-form submission settings: multiple submissions, language, timezone, confirmation email: `apps/dashboard/src/pages/FormDetailsPage.tsx:10`
-- Per-form honeypot field name: `apps/dashboard/src/pages/FormDetailsPage.tsx:36`
-- Open a given tab with ?tab=, used by the Edit icon of the forms list: `apps/dashboard/src/pages/FormDetailsPage.tsx:71`
-- Per-form submission settings: multiple submissions, language, timezone, confirmation email: `apps/dashboard/src/pages/FormDetailsPage.tsx:87`
-- Pending value of Enable Notifications; upstream changed the saved form instead, so it could never be saved: `apps/dashboard/src/pages/FormDetailsPage.tsx:89`
-- Per-form honeypot field name, empty means the default: `apps/dashboard/src/pages/FormDetailsPage.tsx:103`
-- Per-form submission settings: `apps/dashboard/src/pages/FormDetailsPage.tsx:136`
-- Detect Enable Notifications changes: `apps/dashboard/src/pages/FormDetailsPage.tsx:138`
-- Per-form honeypot field name: `apps/dashboard/src/pages/FormDetailsPage.tsx:143`
-- Re-check changes for the fork's settings and Enable Notifications: `apps/dashboard/src/pages/FormDetailsPage.tsx:151`
-- Multiple submissions allowed by default: `apps/dashboard/src/pages/FormDetailsPage.tsx:179`
-- Per-form submission settings: `apps/dashboard/src/pages/FormDetailsPage.tsx:200`
-- Load Enable Notifications: `apps/dashboard/src/pages/FormDetailsPage.tsx:202`
-- A URL of the built-in page is shown as empty: the page now follows the form's language: `apps/dashboard/src/pages/FormDetailsPage.tsx:206`
-- Empty: the built-in page in the form's language is used: `apps/dashboard/src/pages/FormDetailsPage.tsx:211`
-- Older forms have no honeypot field name: `apps/dashboard/src/pages/FormDetailsPage.tsx:220`
-- Per-form honeypot field name, empty means the default: `apps/dashboard/src/pages/FormDetailsPage.tsx:229`
-- Real API URL instead of a hardcoded localhost one: `apps/dashboard/src/pages/FormDetailsPage.tsx:250`
-- Save Enable Notifications: `apps/dashboard/src/pages/FormDetailsPage.tsx:435`
-- Per-form submission settings: `apps/dashboard/src/pages/FormDetailsPage.tsx:438`
-- An empty honeypot field name is not saved, the default applies: `apps/dashboard/src/pages/FormDetailsPage.tsx:442`
-- Keep the saved settings, otherwise the page still sees unsaved changes after saving: `apps/dashboard/src/pages/FormDetailsPage.tsx:456`
-- Pending value, saved with Save Changes like the other settings: `apps/dashboard/src/pages/FormDetailsPage.tsx:1419`
-- Per-form submission settings: multiple submissions, language, timezone, confirmation email: `apps/dashboard/src/pages/FormDetailsPage.tsx:1469`
-- Empty means the built-in page in the form's language: `apps/dashboard/src/pages/FormDetailsPage.tsx:1482`
-- Hidden: needs a reCAPTCHA key this instance does not set, and upstream drops the token before checking it: `apps/dashboard/src/pages/FormDetailsPage.tsx:1503`
-- Hidden: this field is never saved nor used: `apps/dashboard/src/pages/FormDetailsPage.tsx:1535`
-- Per-form honeypot field name: `apps/dashboard/src/pages/FormDetailsPage.tsx:1570`
-- CAPTCHA toggle is hidden: `apps/dashboard/src/pages/FormDetailsPage.tsx:1608`
-- CORS field is hidden: `apps/dashboard/src/pages/FormDetailsPage.tsx:1611`
-- Real uploads URL instead of a hardcoded localhost one: `apps/dashboard/src/pages/FormDetailsPage.tsx:1776`
-- Real uploads URL instead of a hardcoded localhost one: `apps/dashboard/src/pages/FormDetailsPage.tsx:1787`
+- Save all changes button at the bottom of each settings card: `apps/dashboard/src/pages/FormDetailsPage.tsx:12`
+- Per-form honeypot field name: `apps/dashboard/src/pages/FormDetailsPage.tsx:38`
+- Open a given tab with ?tab=, used by the Edit icon of the forms list: `apps/dashboard/src/pages/FormDetailsPage.tsx:73`
+- Per-form submission settings: multiple submissions, language, timezone, confirmation email: `apps/dashboard/src/pages/FormDetailsPage.tsx:89`
+- Pending value of Enable Notifications; upstream changed the saved form instead, so it could never be saved: `apps/dashboard/src/pages/FormDetailsPage.tsx:91`
+- Per-form honeypot field name, empty means the default: `apps/dashboard/src/pages/FormDetailsPage.tsx:105`
+- Per-form submission settings: `apps/dashboard/src/pages/FormDetailsPage.tsx:138`
+- Detect Enable Notifications changes: `apps/dashboard/src/pages/FormDetailsPage.tsx:140`
+- Per-form honeypot field name: `apps/dashboard/src/pages/FormDetailsPage.tsx:145`
+- Re-check changes for the fork's settings and Enable Notifications: `apps/dashboard/src/pages/FormDetailsPage.tsx:153`
+- Multiple submissions allowed by default: `apps/dashboard/src/pages/FormDetailsPage.tsx:181`
+- Per-form submission settings: `apps/dashboard/src/pages/FormDetailsPage.tsx:202`
+- Load Enable Notifications: `apps/dashboard/src/pages/FormDetailsPage.tsx:204`
+- A URL of the built-in page is shown as empty: the page now follows the form's language: `apps/dashboard/src/pages/FormDetailsPage.tsx:208`
+- Empty: the built-in page in the form's language is used: `apps/dashboard/src/pages/FormDetailsPage.tsx:213`
+- Older forms have no honeypot field name: `apps/dashboard/src/pages/FormDetailsPage.tsx:222`
+- Per-form honeypot field name, empty means the default: `apps/dashboard/src/pages/FormDetailsPage.tsx:231`
+- Real API URL instead of a hardcoded localhost one: `apps/dashboard/src/pages/FormDetailsPage.tsx:252`
+- Save Enable Notifications: `apps/dashboard/src/pages/FormDetailsPage.tsx:437`
+- Per-form submission settings: `apps/dashboard/src/pages/FormDetailsPage.tsx:440`
+- An empty honeypot field name is not saved, the default applies: `apps/dashboard/src/pages/FormDetailsPage.tsx:444`
+- Keep the saved settings, otherwise the page still sees unsaved changes after saving: `apps/dashboard/src/pages/FormDetailsPage.tsx:458`
+- Every save button saves the whole page: `apps/dashboard/src/pages/FormDetailsPage.tsx:1352`
+- Pending value, saved with Save Changes like the other settings: `apps/dashboard/src/pages/FormDetailsPage.tsx:1422`
+- Save all changes from this card too: `apps/dashboard/src/pages/FormDetailsPage.tsx:1470`
+- Per-form submission settings: multiple submissions, language, timezone, confirmation email: `apps/dashboard/src/pages/FormDetailsPage.tsx:1474`
+- Save all changes from this card too: `apps/dashboard/src/pages/FormDetailsPage.tsx:1476`
+- Empty means the built-in page in the form's language: `apps/dashboard/src/pages/FormDetailsPage.tsx:1490`
+- Save all changes from this card too: `apps/dashboard/src/pages/FormDetailsPage.tsx:1504`
+- Hidden: needs a reCAPTCHA key this instance does not set, and upstream drops the token before checking it: `apps/dashboard/src/pages/FormDetailsPage.tsx:1513`
+- Hidden: this field is never saved nor used: `apps/dashboard/src/pages/FormDetailsPage.tsx:1545`
+- Per-form honeypot field name: `apps/dashboard/src/pages/FormDetailsPage.tsx:1580`
+- CAPTCHA toggle is hidden: `apps/dashboard/src/pages/FormDetailsPage.tsx:1618`
+- CORS field is hidden: `apps/dashboard/src/pages/FormDetailsPage.tsx:1621`
+- Save all changes from this card too: `apps/dashboard/src/pages/FormDetailsPage.tsx:1629`
+- Real uploads URL instead of a hardcoded localhost one: `apps/dashboard/src/pages/FormDetailsPage.tsx:1788`
+- Real uploads URL instead of a hardcoded localhost one: `apps/dashboard/src/pages/FormDetailsPage.tsx:1799`
 
 `apps/dashboard/src/pages/FormsPage.tsx`
 

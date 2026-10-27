@@ -60,9 +60,10 @@ const Toggle: React.FC<{ checked: boolean, onChange: (checked: boolean) => void,
 interface WeeblrSubmissionSettingsProps {
     value: WeeblrSubmissionSettingsValue
     onChange: (value: WeeblrSubmissionSettingsValue) => void
+    children?: React.ReactNode
 }
 
-export const WeeblrSubmissionSettings: React.FC<WeeblrSubmissionSettingsProps> = ({ value, onChange }) => {
+export const WeeblrSubmissionSettings: React.FC<WeeblrSubmissionSettingsProps> = ({ value, onChange, children }) => {
     const config = useWeeblrConfig()
     const timezones = useMemo(() => listTimezones(value.timezone), [value.timezone])
     const languages = config?.languages ?? [{ code: value.language, name: value.language }]
@@ -141,6 +142,7 @@ export const WeeblrSubmissionSettings: React.FC<WeeblrSubmissionSettingsProps> =
                     <Toggle checked={value.allowMultipleSubmissions} onChange={(allowMultipleSubmissions) => update({ allowMultipleSubmissions })} label="Allow Multiple Submissions" />
                 </div>
             </div>
+            {children}
         </div>
     )
 }
