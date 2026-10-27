@@ -11,6 +11,8 @@ import { WeeblrHoneypotField } from '../components/WeeblrHoneypotField';
 import { WeeblrSubmissionSettings, readWeeblrSubmissionSettings, weeblrSubmissionSettingsChanged, isBuiltInSuccessUrl } from '../components/WeeblrSubmissionSettings';
 // [weeblr] Save all changes button at the bottom of each settings card
 import { WeeblrSaveAllButton } from '../components/WeeblrSaveAllButton';
+// [weeblr] Real submission dates in the viewer's locale and timezone
+import { weeblrDateTime, weeblrDateTimeFull, weeblrRelativeTime } from '../lib/weeblrDates';
 // [weeblr] Jev spam filtering settings and submission scores
 import { WeeblrSpamFiltering, WeeblrSubmissionScores, readWeeblrSpamFiltering, weeblrSpamFilteringChanged, weeblrSpamFilteringPayload, weeblrSpamFilteringErrors } from '../components/WeeblrSpamFiltering';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
@@ -262,18 +264,8 @@ export function FormDetailsPage() {
     };
 
     const formatSubmissionDate = (dateString: string) => {
-        const date = new Date(dateString);
-        const now = new Date();
-        const diffInHours = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60));
-
-        if (diffInHours < 1) {
-            return 'Just now';
-        } else if (diffInHours < 24) {
-            return `${diffInHours} hour${diffInHours > 1 ? 's' : ''} ago`;
-        } else {
-            const diffInDays = Math.floor(diffInHours / 24);
-            return `${diffInDays} day${diffInDays > 1 ? 's' : ''} ago`;
-        }
+        // [weeblr] Real date and time instead of "Just now" / "N hours ago", which only counted whole hours
+        return weeblrDateTime(dateString);
     };
 
     const getStatusColor = (status: string) => {
@@ -1141,7 +1133,8 @@ form.addEventListener('submit', async (e) => {
                                                 {columnOrder.map((fieldName) => (
                                                     <td key={fieldName} className="px-6 py-4 text-sm text-gray-900">
                                                         {fieldName === 'submitted' ? (
-                                                            <span className="text-gray-500">
+                                                            // [weeblr] Time elapsed since the submission, on hover
+                                                            <span className="text-gray-500" title={weeblrRelativeTime(submission.createdAt)}>
                                                                 {formatSubmissionDate(submission.createdAt)}
                                                             </span>
                                                         ) : fieldName === 'status' ? (
@@ -1765,7 +1758,8 @@ form.addEventListener('submit', async (e) => {
                                         </div>
                                         <div>
                                             <label className="block text-sm font-medium text-gray-500 mb-1">Submitted</label>
-                                            <p className="text-sm text-gray-900">{formatSubmissionDate(selectedSubmission.createdAt)}</p>
+                                            {/* [weeblr] Full date and time with seconds */}
+                                            <p className="text-sm text-gray-900" title={weeblrRelativeTime(selectedSubmission.createdAt)}>{weeblrDateTimeFull(selectedSubmission.createdAt)}</p>
                                         </div>
                                     </div>
 
