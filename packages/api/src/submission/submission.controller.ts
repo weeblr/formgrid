@@ -8,6 +8,8 @@ import { checkFormSubmissionRateLimit } from '../middleware/rateLimit';
 import { resolveSpamProtectionSettings } from '../form/spamProtectionDefaults';
 import { AuthRequest } from '../presentation/middleware/auth';
 import { SubmissionNotFoundError } from './submission.errors';
+// [weeblr] Needed for our own success and error pages
+import { env } from '../config/env';
 
 /**
  * Submission controller for handling HTTP requests
@@ -153,7 +155,8 @@ export class SubmissionController {
                 const form = await formRepo.findByEndpointSlug(endpointSlug);
 
                 // Use custom redirect URL or default success page
-                const redirectUrl = (form?.settings as any)?.redirectUrl || 'http://localhost:5173/success.html';
+                // [weeblr] Our own success page instead of a hardcoded localhost URL
+                const redirectUrl = (form?.settings as any)?.redirectUrl || `${env.APP_URL}/submission-success.html`;
 
                 return res.redirect(redirectUrl);
             } else {
@@ -174,7 +177,8 @@ export class SubmissionController {
 
             if (isHtmlForm) {
                 // For HTML forms, redirect to error page with error message
-                const errorPageUrl = `http://localhost:5173/error.html?message=${encodeURIComponent(errorMessage)}`;
+                // [weeblr] Our own error page instead of a hardcoded localhost URL
+                const errorPageUrl = `${env.APP_URL}/submission-error.html?message=${encodeURIComponent(errorMessage)}`;
                 return res.redirect(errorPageUrl);
             } else {
                 // JSON responses for API calls
@@ -613,7 +617,8 @@ export class SubmissionController {
             contentType.includes('multipart/form-data');
 
         if (isHtmlForm) {
-            const redirectUrl = settings?.redirectUrl || 'http://localhost:5173/success.html';
+            // [weeblr] Our own success page instead of a hardcoded localhost URL
+            const redirectUrl = settings?.redirectUrl || `${env.APP_URL}/submission-success.html`;
             res.redirect(redirectUrl);
             return;
         }

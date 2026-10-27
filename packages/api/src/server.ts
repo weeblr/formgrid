@@ -21,6 +21,9 @@ import { AuthController } from './auth/auth.controller';
 import { UserController } from './user/user.controller';
 import { FormController } from './form/form.controller';
 import { SubmissionController } from './submission/submission.controller';
+// [weeblr] Fork-only routes
+import { createWeeblrAccountRoutes } from './weeblr/account.routes';
+import { createWeeblrAuthRoutes } from './weeblr/auth.routes';
 
 // Load environment variables
 config();
@@ -84,7 +87,11 @@ app.get('/health', (_req: Request, res: Response) => {
 });
 
 // API routes
+// [weeblr] Email verification, mounted first to replace signup and pre-check login
+app.use('/api/auth', createWeeblrAuthRoutes(prisma, emailProvider));
 app.use('/api/auth', createAuthRoutes(authController));
+// [weeblr] Account deletion
+app.use('/api/user', createWeeblrAccountRoutes(prisma));
 app.use('/api/user', createUserRoutes(userController));
 app.use('/api/forms', createFormRoutes(formController));
 app.use('/api', createSubmissionRoutes(submissionController));

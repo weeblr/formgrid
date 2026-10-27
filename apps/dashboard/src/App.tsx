@@ -3,7 +3,8 @@ import { AuthProvider } from './context/AuthContext'
 import { Navbar } from './components/Navbar'
 import { RequireAuth } from './components/RequireAuth'
 import { LandingPage } from './pages/LandingPage'
-import { SignupPage } from './pages/SignupPage'
+// [weeblr] Fork-only signup page, requiring email verification
+import { WeeblrSignupPage as SignupPage } from './pages/WeeblrSignupPage'
 import { LoginPage } from './pages/LoginPage'
 import { ForgotPasswordPage } from './pages/ForgotPasswordPage'
 import { ResetPasswordPage } from './pages/ResetPasswordPage'
@@ -12,7 +13,9 @@ import { DashboardPage } from './pages/DashboardPage'
 import { FormsPage } from './pages/FormsPage'
 import { FormBuilderPage } from './pages/FormBuilderPage'
 import { FormDetailsPage } from './pages/FormDetailsPage'
-import { ProfilePage } from './pages/dashboard/ProfilePage'
+// [weeblr] Fork-only Profile and Settings pages
+import { WeeblrProfilePage as ProfilePage } from './pages/dashboard/WeeblrProfilePage'
+import { WeeblrSettingsPage } from './pages/dashboard/WeeblrSettingsPage'
 
 function AppContent() {
     const location = useLocation()
@@ -73,6 +76,15 @@ function AppContent() {
                         element={
                             <RequireAuth>
                                 <ProfilePage />
+                            </RequireAuth>
+                        }
+                    />
+                    {/* [weeblr] Settings page */}
+                    <Route
+                        path="/dashboard/settings"
+                        element={
+                            <RequireAuth>
+                                <WeeblrSettingsPage />
                             </RequireAuth>
                         }
                     />
