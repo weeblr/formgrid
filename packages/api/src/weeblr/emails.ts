@@ -73,8 +73,17 @@ const layout = (language: string, accent: Accent, heading: string, body: string,
 </body>
 </html>`;
 
-const intro = (accent: Accent, text: string): string =>
-    `<p style="margin: 0 0 20px; padding: 8px 12px; border-left: 4px solid ${accent.color}; background: ${accent.tint};">${escapeHtml(text)}</p>`;
+const intro = (accent: Accent, text: string, lines: string[] = []): string =>
+    `<div style="margin: 0 0 20px; padding: 8px 12px; border-left: 4px solid ${accent.color}; background: ${accent.tint};">`
+    + `<p style="margin: 0;">${escapeHtml(text)}</p>`
+    + lines.map((line) => `<p style="margin: 4px 0 0; font-weight: bold;">${escapeHtml(line)}</p>`).join('')
+    + '</div>';
+
+/**
+ * "Label: value", with the space French puts before the colon.
+ */
+const labelled = (language: string, label: string, value: string): string =>
+    language === 'fr' ? `${label} : ${value}` : `${label}: ${value}`;
 
 const detailRow = (label: string, value: string): string =>
     `<tr><td style="padding: 2px 12px 2px 0; color: #6b7280; vertical-align: top; white-space: nowrap;">${escapeHtml(label)}</td><td style="padding: 2px 0; color: #374151;">${escapeHtml(value)}</td></tr>`;
@@ -130,6 +139,7 @@ export const sendNotificationEmail = async (mailer: MailerService, to: string, {
     const fields = data.fields || [];
     const replyTo = isValidEmail(data.submitterEmail) ? data.submitterEmail : '';
     const footer = replyTo ? t(language, 'email.footer.reply_to', { email: replyTo }) : t(language, 'email.footer.automated');
+    const spamLines = spamDetails(language, spam).map(([label, value]) => labelled(language, label, value));
 
     const fieldRows = fields
         .map((field) => `<tr><td style="padding: 8px 12px; border-bottom: 1px solid #e5e7eb; font-weight: bold; vertical-align: top; width: 30%;">${escapeHtml(field.label)}</td><td style="padding: 8px 12px; border-bottom: 1px solid #e5e7eb; white-space: pre-wrap;">${escapeHtml(formatValue(field.value, language))}</td></tr>`)
@@ -140,11 +150,10 @@ export const sendNotificationEmail = async (mailer: MailerService, to: string, {
         detailRow(t(language, 'email.label.submitted_at'), submittedAt),
         detailRow(t(language, 'email.label.submission_id'), data.submissionId),
         ...(data.ipAddress ? [detailRow(t(language, 'email.label.ip'), data.ipAddress)] : []),
-        ...spamDetails(language, spam).map(([label, value]) => detailRow(label, value)),
     ].join('');
 
     const body = `
-        ${intro(accent, t(language, 'email.notification.intro', { form: data.formName }))}
+        ${intro(accent, t(language, 'email.notification.intro', { form: data.formName }), spamLines)}
         <h2 style="font-size: 16px; margin: 0 0 8px;">${escapeHtml(t(language, 'email.notification.data_heading'))}</h2>
         <table style="width: 100%; border-collapse: collapse; border: 1px solid #e5e7eb; margin: 0 0 24px;">
             <thead><tr style="background: ${accent.tint};"><th style="padding: 8px 12px; text-align: left; border-bottom: 2px solid ${accent.color};">${escapeHtml(t(language, 'email.label.field'))}</th><th style="padding: 8px 12px; text-align: left; border-bottom: 2px solid ${accent.color};">${escapeHtml(t(language, 'email.label.value'))}</th></tr></thead>
@@ -155,6 +164,7 @@ export const sendNotificationEmail = async (mailer: MailerService, to: string, {
 
     const text = [
         t(language, 'email.notification.intro', { form: data.formName }),
+        ...spamLines,
         '',
         `${t(language, 'email.notification.data_heading')}:`,
         ...fields.map((field) => `- ${field.label}: ${formatValue(field.value, language)}`),
@@ -164,7 +174,6 @@ export const sendNotificationEmail = async (mailer: MailerService, to: string, {
         `${t(language, 'email.label.submitted_at')}: ${submittedAt}`,
         `${t(language, 'email.label.submission_id')}: ${data.submissionId}`,
         ...(data.ipAddress ? [`${t(language, 'email.label.ip')}: ${data.ipAddress}`] : []),
-        ...spamDetails(language, spam).map(([label, value]) => `${label}: ${value}`),
         '',
         footer,
     ].join('\n');
