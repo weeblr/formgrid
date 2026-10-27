@@ -1,6 +1,8 @@
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { UserAvatar } from '../ui/UserAvatar';
+// [weeblr] Settings only when accounts are enabled
+import { useWeeblrConfig } from '../../lib/weeblrConfig';
 
 interface DashboardSidebarProps {
     open: boolean;
@@ -16,6 +18,7 @@ const navigation = [
 
 export function DashboardSidebar({ open, setOpen }: DashboardSidebarProps) {
     const location = useLocation();
+    const weeblrConfig = useWeeblrConfig();
     const { user, logout } = useAuth();
 
     return (
@@ -61,7 +64,7 @@ export function DashboardSidebar({ open, setOpen }: DashboardSidebarProps) {
                 {/* Navigation */}
                 <nav className="px-6 py-4 flex-1 overflow-y-auto">
                     <ul className="space-y-2">
-                        {navigation.map((item) => {
+                        {navigation.filter((item) => item.href !== '/dashboard/settings' || weeblrConfig?.enableAccounts).map((item) => {
                             const isActive = location.pathname === item.href;
                             return (
                                 <li key={item.name}>

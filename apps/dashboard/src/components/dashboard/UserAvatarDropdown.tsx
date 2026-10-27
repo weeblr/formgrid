@@ -2,11 +2,14 @@ import { useState, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { UserAvatar } from '../ui/UserAvatar';
+// [weeblr] Settings only when accounts are enabled
+import { useWeeblrConfig } from '../../lib/weeblrConfig';
 
 export function UserAvatarDropdown() {
     const [isOpen, setIsOpen] = useState(false);
     const dropdownRef = useRef<HTMLDivElement>(null);
     const { user, logout } = useAuth();
+    const weeblrConfig = useWeeblrConfig();
 
     // Close dropdown when clicking outside
     useEffect(() => {
@@ -64,6 +67,7 @@ export function UserAvatarDropdown() {
                                 </svg>
                                 Profile
                             </Link>
+                            {weeblrConfig?.enableAccounts && (
                             <Link
                                 to="/dashboard/settings"
                                 className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors duration-200"
@@ -74,6 +78,7 @@ export function UserAvatarDropdown() {
                                 </svg>
                                 Settings
                             </Link>
+                            )}
                         </div>
 
                         {/* Sign Out */}

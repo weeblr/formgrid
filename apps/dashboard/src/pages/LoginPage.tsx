@@ -5,6 +5,8 @@ import { z } from 'zod'
 import { useNavigate, useLocation, Link } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import { Container } from '../components/Container'
+// [weeblr] Signup link only when accounts are enabled
+import { useWeeblrConfig } from '../lib/weeblrConfig'
 
 // Zod validation schema
 const loginSchema = z.object({
@@ -22,6 +24,7 @@ type LoginFormData = z.infer<typeof loginSchema>
 
 export const LoginPage: React.FC = () => {
     const { login } = useAuth()
+    const weeblrConfig = useWeeblrConfig()
     const navigate = useNavigate()
     const location = useLocation()
     const [isSubmitting, setIsSubmitting] = useState(false)
@@ -68,12 +71,14 @@ export const LoginPage: React.FC = () => {
                         <h2 className="mt-6 text-center text-3xl font-bold text-gray-900">
                             Sign in to your account
                         </h2>
-                        <p className="mt-2 text-center text-sm text-gray-600">
-                            Don't have an account?{' '}
-                            <Link to="/signup" className="font-medium text-gray-600 hover:text-gray-500">
-                                Sign up
-                            </Link>
-                        </p>
+                        {weeblrConfig?.enableAccounts && (
+                            <p className="mt-2 text-center text-sm text-gray-600">
+                                Don't have an account?{' '}
+                                <Link to="/signup" className="font-medium text-gray-600 hover:text-gray-500">
+                                    Sign up
+                                </Link>
+                            </p>
+                        )}
                     </div>
 
                     <form className="mt-8 space-y-6" onSubmit={handleSubmit(onSubmit)}>

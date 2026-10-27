@@ -104,12 +104,7 @@ export function Navbar() {
                                 >
                                     Login
                                 </Link>
-                                <Link
-                                    to="/signup"
-                                    className="bg-gray-900 hover:bg-gray-800 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
-                                >
-                                    Sign Up
-                                </Link>
+                                {/* [weeblr] No Sign Up button, signup is only linked from the sign-in page */}
                             </>
                         )}
                     </div>

@@ -5,6 +5,7 @@ import { PrismaClient, User } from '@prisma/client';
 import { env } from '../config/env';
 import { EmailProvider } from '../infrastructure/email/EmailProvider';
 import { signupSchema, loginSchema } from '../auth/auth.validation';
+import { accountsEnabled } from './config';
 
 // [weeblr] Email verification, disabled in the open source version.
 // Mounted before the upstream auth routes: signup is replaced, login is only pre-checked.
@@ -53,6 +54,14 @@ export function createWeeblrAuthRoutes(prisma: PrismaClient, emailProvider: Emai
      * Create an unverified account and email a verification link. No login token is issued.
      */
     router.post('/signup', async (req: Request, res: Response): Promise<void> => {
+        if (!accountsEnabled()) {
+            res.status(403).json({
+                success: false,
+                message: 'Account creation is disabled',
+            });
+            return;
+        }
+
         try {
             const validationResult = signupSchema.safeParse(req.body);
             if (!validationResult.success) {

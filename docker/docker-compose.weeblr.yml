@@ -58,6 +58,11 @@ x-frontend-build: &frontend-build
         "$${WBL_ORIGIN_AUTH}" 1;
     }
 
+    map "$${WBL_ENABLE_ACCOUNTS}" $$wbl_accounts_enabled {
+        default 0;
+        "true" 1;
+    }
+
     server {
         listen 80;
         root /usr/share/nginx/html;
@@ -81,6 +86,13 @@ x-frontend-build: &frontend-build
             proxy_set_header X-Forwarded-For $$remote_addr;
             proxy_set_header X-Forwarded-Proto $$scheme;
             proxy_set_header wbl-origin-auth "";
+        }
+
+        location ~ ^/(signup|dashboard/settings)/?$$ {
+            if ($$wbl_accounts_enabled = 0) {
+                return 403;
+            }
+            try_files /index.html =404;
         }
 
         location / {
@@ -146,6 +158,8 @@ services:
       # File Storage Configuration
       - FILE_STORAGE_TYPE=local  # Options: local, s3, gcs, minio
       - UPLOAD_PATH=/app/uploads
+      # Account creation and deletion, off unless set to true
+      - ENABLE_ACCOUNTS=${ENABLE_ACCOUNTS:-false}
     depends_on:
       db:
         condition: service_healthy
@@ -160,6 +174,7 @@ services:
     environment:
       # Secret header added by a Cloudflare transform rule; requests without it get a 403
       - WBL_ORIGIN_AUTH=${WBL_ORIGIN_AUTH:?WBL_ORIGIN_AUTH must be set}
+      - WBL_ENABLE_ACCOUNTS=${ENABLE_ACCOUNTS:-false}
       - NGINX_ENVSUBST_FILTER=^WBL_
     depends_on:
       - backend

@@ -4,6 +4,7 @@ import { PrismaClient } from '@prisma/client';
 import { z } from 'zod';
 import { authMiddleware } from '../presentation/middleware/auth';
 import { deleteFile } from '../middleware/fileUpload';
+import { accountsEnabled } from './config';
 
 // [weeblr] Account deletion, not available in the open source version
 
@@ -44,6 +45,14 @@ export function createWeeblrAccountRoutes(prisma: PrismaClient): Router {
      * The user must confirm by sending their email address.
      */
     router.delete('/me', authMiddleware, async (req: Request, res: Response): Promise<void> => {
+        if (!accountsEnabled()) {
+            res.status(403).json({
+                success: false,
+                message: 'Account deletion is disabled',
+            });
+            return;
+        }
+
         try {
             const userId = (req as any).user?.id;
             if (!userId) {

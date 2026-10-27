@@ -16,6 +16,8 @@ import { FormDetailsPage } from './pages/FormDetailsPage'
 // [weeblr] Fork-only Profile and Settings pages
 import { WeeblrProfilePage as ProfilePage } from './pages/dashboard/WeeblrProfilePage'
 import { WeeblrSettingsPage } from './pages/dashboard/WeeblrSettingsPage'
+// [weeblr] Private instance routing
+import { WeeblrHomeRedirect, WeeblrAccountsRoute } from './components/WeeblrRoutes'
 
 function AppContent() {
     const location = useLocation()
@@ -26,8 +28,9 @@ function AppContent() {
             {!isDashboardRoute && <Navbar />}
             <div className={!isDashboardRoute ? 'pt-16' : ''}>
                 <Routes>
-                    <Route path="/" element={<LandingPage />} />
-                    <Route path="/signup" element={<SignupPage />} />
+                    {/* [weeblr] No landing page, signup only when accounts are enabled */}
+                    <Route path="/" element={<WeeblrHomeRedirect />} />
+                    <Route path="/signup" element={<WeeblrAccountsRoute><SignupPage /></WeeblrAccountsRoute>} />
                     <Route path="/login" element={<LoginPage />} />
                     <Route path="/forgot-password" element={<ForgotPasswordPage />} />
                     <Route path="/reset-password" element={<ResetPasswordPage />} />
@@ -84,10 +87,14 @@ function AppContent() {
                         path="/dashboard/settings"
                         element={
                             <RequireAuth>
-                                <WeeblrSettingsPage />
+                                <WeeblrAccountsRoute>
+                                    <WeeblrSettingsPage />
+                                </WeeblrAccountsRoute>
                             </RequireAuth>
                         }
                     />
+                    {/* [weeblr] Any other page goes to the dashboard or the sign-in page */}
+                    <Route path="*" element={<WeeblrHomeRedirect />} />
                 </Routes>
             </div>
         </div>
