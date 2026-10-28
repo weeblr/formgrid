@@ -32,6 +32,12 @@
     "pnpm": ">=8.0.0"
   },
   "packageManager": "pnpm@8.15.0",
+  "pnpm": {
+    "overrides": {
+      "@prisma/config>deepmerge-ts": "^8.0.2",
+      "bull>uuid": "^11.1.1"
+    }
+  },
   "keywords": [
     "form",
     "api",

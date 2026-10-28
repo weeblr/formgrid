@@ -35,6 +35,22 @@ The compose file uses `mysql:8.4`. On its first start on a volume created by 8.0
 2. Deploy. The first start of the `db` container takes a few seconds longer; its log shows `Server upgrade from '800xx' to '804xx' completed`.
 3. If anything goes wrong: set the image back to `mysql:8.0`, remove the `mysql_data` volume, start, and restore with `docker exec -i formgrid-db sh -c 'mysql -uroot -p"$MYSQL_ROOT_PASSWORD"' < formgrid-backup.sql`.
 
+## Dependency versions
+
+Everything that is deployed (API, queue worker, dashboard) is on versions with no known advisory, checked with `pnpm audit --prod`. JSON files cannot carry a `[weeblr]` tag, so these changes to upstream manifests are listed here; after an upstream merge, keep the higher version of each.
+
+- `packages/api/package.json`: `@aws-sdk/client-s3` ^3.1158.0, `@google-cloud/storage` ^8.4.0, `@prisma/client` and `prisma` ^6.19.3, `axios` ^1.21.0, `express` ^5.3.0, `jsonwebtoken` ^9.0.3, `minio` ^8.0.7, `multer` ^2.5.0, `nodemailer` ^10.2.1 (with `@types/nodemailer` ^8.0.2), `zod` ^4.6.7.
+- `apps/dashboard/package.json`: `@hookform/resolvers` ^5.9.2, `axios` ^1.21.0, `react-hook-form` ^7.91.0, `react-router-dom` ^7.18.5, `react-syntax-highlighter` ^16.1.2, `zod` ^4.6.7.
+- `package.json` (root), `pnpm.overrides`: `@prisma/config>deepmerge-ts` ^8.0.2 and `bull>uuid` ^11.1.1, whose parents pin vulnerable versions.
+- `pnpm-lock.yaml`: refreshed, so indirect dependencies are at their latest version within range.
+
+Still reported, and left as they are:
+
+- `minio` pulls in vulnerable `stream-json` and `decode-uri-component`, and its latest release has no fix. Only `packages/api/src/scripts/setup-minio.ts` imports `minio`, and nothing in the deployment runs it. Forcing newer major versions under it could break it, so they are not overridden.
+- `next` and `postcss` in `examples/`, which is not deployed.
+
+Prisma stays on 6: Prisma 7 is a migration of its own (driver adapters, new generator). The newer Express and Nodemailer type definitions add type errors to the API build (route params typed `string | string[]`, a renamed `nodemailer` namespace). They are type-only: the API build already logs upstream's type errors without failing, and the compiled code is unchanged.
+
 ## Fork-only files
 
 Files that do not exist upstream, so upstream merges never touch them.
