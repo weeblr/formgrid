@@ -73,21 +73,6 @@ export const getSpamFiltering = (settings: unknown): SpamFilteringSettings | nul
     return { enabled: true, apiKey: parsed.data.apiKey, excludedFields: parseExcludedFields(parsed.data.excludedFields), ...withDefaultThresholds(parsed.data) };
 };
 
-/**
- * Form settings without the Jev API key, for anything leaving the server.
- */
-export const withoutSecrets = (settings: unknown): unknown => {
-    if (!settings || typeof settings !== 'object') {
-        return settings;
-    }
-    const { spamFiltering, ...rest } = settings as Record<string, unknown>;
-    if (!spamFiltering || typeof spamFiltering !== 'object') {
-        return rest;
-    }
-    const { apiKey, ...publicSpamFiltering } = spamFiltering as Record<string, unknown>;
-    return { ...rest, spamFiltering: publicSpamFiltering };
-};
-
 export type SpamBand = 'ok' | 'suspicious' | 'held';
 
 export interface SpamVerdict {

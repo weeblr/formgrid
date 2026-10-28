@@ -55,7 +55,8 @@ export const authMiddleware = (req: Request, res: Response, next: NextFunction):
         }
 
         // Verify JWT token
-        const payload = jwt.verify(token, env.JWT_SECRET) as jwt.JwtPayload;
+        // [weeblr] Algorithm pinned
+        const payload = jwt.verify(token, env.JWT_SECRET, { algorithms: ['HS256'] }) as jwt.JwtPayload;
 
         // Check if payload has required fields
         if (!payload.sub || !payload.email) {
@@ -131,7 +132,8 @@ export const optionalAuthMiddleware = (req: Request, res: Response, next: NextFu
         }
 
         // Try to verify token
-        const payload = jwt.verify(token, env.JWT_SECRET) as jwt.JwtPayload;
+        // [weeblr] Algorithm pinned
+        const payload = jwt.verify(token, env.JWT_SECRET, { algorithms: ['HS256'] }) as jwt.JwtPayload;
 
         if (payload.sub && payload.email) {
             // Attach user data if token is valid

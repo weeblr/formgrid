@@ -211,9 +211,11 @@ export class AuthController {
                 message: 'If an account with that email exists, a password reset link has been sent.',
             });
         } catch (error) {
-            res.status(400).json({
-                success: false,
-                message: (error as Error).message,
+            // [weeblr] Same answer as success, so a failed send does not reveal that the account exists
+            console.error('Password reset request failed:', error);
+            res.status(200).json({
+                success: true,
+                message: 'If an account with that email exists, a password reset link has been sent.',
             });
         }
     }

@@ -95,7 +95,8 @@ export class SubmissionService {
 
         // Check if multiple submissions are allowed
         if (!this.allowMultipleSubmissions(form.settings as FormSettings)) {
-            const recentSubmissions = await this.submissionRepo.getRecentSubmissionsByIp(ip, 60); // 1 hour
+            // [weeblr] Only submissions to this form count
+            const recentSubmissions = await this.submissionRepo.getRecentSubmissionsByIp(ip, 60, form.id); // 1 hour
             if (recentSubmissions.length > 0) {
                 throw new Error('Multiple submissions not allowed');
             }

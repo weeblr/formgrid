@@ -116,7 +116,7 @@ x-frontend-build: &frontend-build
             add_header Content-Security-Policy "sandbox" always;
         }
 
-        location ~ ^/(signup|dashboard/settings)/?$$ {
+        location ~* ^/(signup|dashboard/settings)/?$$ {
             include /etc/nginx/wbl-dashboard-headers.conf;
             if ($$wbl_accounts_enabled = 0) {
                 return 403;

@@ -77,6 +77,14 @@ Each change is tagged `[weeblr]` in a comment, so it can be found with a search 
 - Missing upstream but used by auth.repository.ts; columns already exist in init.sql: `packages/api/prisma/schema.prisma:16`
 - Jev spam filtering: probability (0 to 1) that the submission is spam / dangerous, null when not classified: `packages/api/prisma/schema.prisma:72`
 
+`packages/api/src/auth/auth.controller.ts`
+
+- Same answer as success, so a failed send does not reveal that the account exists: `packages/api/src/auth/auth.controller.ts:214`
+
+`packages/api/src/auth/auth.service.ts`
+
+- Algorithm pinned: `packages/api/src/auth/auth.service.ts:107`
+
 `packages/api/src/config/prisma.ts`
 
 - No query details in error messages: `packages/api/src/config/prisma.ts:13`
@@ -100,10 +108,14 @@ Each change is tagged `[weeblr]` in a comment, so it can be found with a search 
 - Language, timezone and auto-reply settings: `packages/api/src/form/form.validation.ts:15`
 - Per-form honeypot field name: `packages/api/src/form/form.validation.ts:26`
 
+`packages/api/src/presentation/middleware/auth.ts`
+
+- Algorithm pinned: `packages/api/src/presentation/middleware/auth.ts:58`
+- Algorithm pinned: `packages/api/src/presentation/middleware/auth.ts:135`
+
 `packages/api/src/queue/jobs/dispatchWebhookJob.ts`
 
-- Strip the Jev API key from webhook payloads: `packages/api/src/queue/jobs/dispatchWebhookJob.ts:3`
-- Without the Jev API key: `packages/api/src/queue/jobs/dispatchWebhookJob.ts:74`
+- No settings: they hold the webhook secret, notification addresses and the Jev API key: `packages/api/src/queue/jobs/dispatchWebhookJob.ts:72`
 
 `packages/api/src/queue/jobs/sendAutoReplyEmailJob.ts`
 
@@ -149,6 +161,10 @@ Each change is tagged `[weeblr]` in a comment, so it can be found with a search 
 - Jev spam filtering scores, null when not classified: `packages/api/src/submission/submission.controller.ts:407`
 - Our own success page, in the form's language, instead of a hardcoded localhost URL: `packages/api/src/submission/submission.controller.ts:652`
 
+`packages/api/src/submission/submission.repository.ts`
+
+- Optional formId: limits the check to one form: `packages/api/src/submission/submission.repository.ts:424`
+
 `packages/api/src/submission/submission.routes.ts`
 
 - Uploads off unless ENABLE_UPLOADS=true; any file part is refused with 403: `packages/api/src/submission/submission.routes.ts:5`
@@ -163,16 +179,17 @@ Each change is tagged `[weeblr]` in a comment, so it can be found with a search 
 - Optional Jev spam filtering: `packages/api/src/submission/submission.service.ts:12`
 - As text, cut to the column size: `packages/api/src/submission/submission.service.ts:54`
 - Only one cleaned, valid address is kept: confirmations and Reply-To use it: `packages/api/src/submission/submission.service.ts:56`
-- As text, cut to the column size: `packages/api/src/submission/submission.service.ts:108`
-- Only one cleaned, valid address is kept: confirmations and Reply-To use it: `packages/api/src/submission/submission.service.ts:110`
-- MySQL JSON columns re-sort object keys: jobs get the fields in the order they were submitted: `packages/api/src/submission/submission.service.ts:117`
-- With spam filtering, a classification job queues the notification and confirmation once Jev has answered: `packages/api/src/submission/submission.service.ts:122`
-- Notification gets the fields in submitted order: `packages/api/src/submission/submission.service.ts:127`
-- End of the branch without spam filtering: `packages/api/src/submission/submission.service.ts:134`
-- Webhook gets the fields in submitted order: `packages/api/src/submission/submission.service.ts:138`
-- Allowed unless explicitly turned off: `packages/api/src/submission/submission.service.ts:315`
-- A confirmation only goes to one valid address: `packages/api/src/submission/submission.service.ts:351`
-- Only when turned on for the form: it emails any address a visitor types in: `packages/api/src/submission/submission.service.ts:356`
+- Only submissions to this form count: `packages/api/src/submission/submission.service.ts:98`
+- As text, cut to the column size: `packages/api/src/submission/submission.service.ts:109`
+- Only one cleaned, valid address is kept: confirmations and Reply-To use it: `packages/api/src/submission/submission.service.ts:111`
+- MySQL JSON columns re-sort object keys: jobs get the fields in the order they were submitted: `packages/api/src/submission/submission.service.ts:118`
+- With spam filtering, a classification job queues the notification and confirmation once Jev has answered: `packages/api/src/submission/submission.service.ts:123`
+- Notification gets the fields in submitted order: `packages/api/src/submission/submission.service.ts:128`
+- End of the branch without spam filtering: `packages/api/src/submission/submission.service.ts:135`
+- Webhook gets the fields in submitted order: `packages/api/src/submission/submission.service.ts:139`
+- Allowed unless explicitly turned off: `packages/api/src/submission/submission.service.ts:316`
+- A confirmation only goes to one valid address: `packages/api/src/submission/submission.service.ts:352`
+- Only when turned on for the form: it emails any address a visitor types in: `packages/api/src/submission/submission.service.ts:357`
 
 `packages/api/src/submission/submission.validation.ts`
 

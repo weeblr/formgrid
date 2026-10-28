@@ -104,7 +104,8 @@ export class AuthService {
      */
     async verifyToken(token: string): Promise<{ id: string; email: string }> {
         try {
-            const decoded = jwt.verify(token, env.JWT_SECRET) as { sub: string; email: string };
+            // [weeblr] Algorithm pinned
+            const decoded = jwt.verify(token, env.JWT_SECRET, { algorithms: ['HS256'] }) as { sub: string; email: string };
             return {
                 id: decoded.sub,
                 email: decoded.email,

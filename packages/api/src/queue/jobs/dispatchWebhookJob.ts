@@ -1,7 +1,5 @@
 import { Job } from 'bull';
 import { DispatchWebhookData } from '../queueConfig';
-// [weeblr] Strip the Jev API key from webhook payloads
-import { withoutSecrets } from '../../weeblr/spamFiltering';
 
 /**
  * Dispatch webhook job processor
@@ -71,8 +69,7 @@ export class DispatchWebhookJob {
                     name: formData.name,
                     description: formData.description,
                     endpointSlug: formData.endpointSlug,
-                    // [weeblr] Without the Jev API key
-                    settings: withoutSecrets(formData.settings),
+                    // [weeblr] No settings: they hold the webhook secret, notification addresses and the Jev API key
                     isActive: formData.isActive,
                     createdAt: formData.createdAt,
                     updatedAt: formData.updatedAt,

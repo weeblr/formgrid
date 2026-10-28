@@ -418,14 +418,17 @@ export class SubmissionRepository {
      * Get recent submissions from an IP address
      * @param ip - The IP address to check
      * @param minutes - Number of minutes to look back
+     * @param formId - Limit to this form
      * @returns Promise<Submission[]> - Recent submissions from IP
      */
-    async getRecentSubmissionsByIp(ip: string, minutes: number = 5): Promise<Submission[]> {
+    // [weeblr] Optional formId: limits the check to one form
+    async getRecentSubmissionsByIp(ip: string, minutes: number = 5, formId?: string): Promise<Submission[]> {
         const since = new Date(Date.now() - minutes * 60 * 1000);
 
         return this.prisma.submission.findMany({
             where: {
                 ip,
+                ...(formId && { formId }),
                 createdAt: {
                     gte: since,
                 },
