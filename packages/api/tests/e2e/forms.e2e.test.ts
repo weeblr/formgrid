@@ -220,19 +220,44 @@ describe('Forms E2E Tests', () => {
             });
         });
 
-        it('should get form by endpoint slug (public access)', async () => {
+        // [weeblr] Signed-in owner only
+        it('should get form by endpoint slug for its owner', async () => {
             const response = await request(app)
                 .get(`/api/forms/slug/${testForm.endpointSlug}`)
+                .set('Authorization', `Bearer ${authToken}`)
                 .expect(200);
 
-            expect(response.body).toHaveProperty('form');
-            expect(response.body.form.endpointSlug).toBe('public-test-form');
-            expect(response.body.form.name).toBe('Public Form');
+            expect(response.body.data.name).toBe('Public Form');
+        });
+
+        it('should fail without authentication', async () => {
+            await request(app)
+                .get(`/api/forms/slug/${testForm.endpointSlug}`)
+                .expect(401);
+        });
+
+        it('should not return another user\'s form', async () => {
+            await e2eSetup.createTestUser({
+                email: 'other@example.com',
+                password: 'password123',
+            });
+            const loginResponse = await request(app)
+                .post('/api/auth/login')
+                .send({
+                    email: 'other@example.com',
+                    password: 'password123',
+                });
+
+            await request(app)
+                .get(`/api/forms/slug/${testForm.endpointSlug}`)
+                .set('Authorization', `Bearer ${loginResponse.body.token}`)
+                .expect(404);
         });
 
         it('should fail with non-existent slug', async () => {
             await request(app)
                 .get('/api/forms/slug/non-existent-slug')
+                .set('Authorization', `Bearer ${authToken}`)
                 .expect(404);
         });
     });

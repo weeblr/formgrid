@@ -213,7 +213,7 @@ export class FormController {
 
     /**
      * GET /api/forms/slug/:endpointSlug
-     * Get a form by its endpoint slug (for public access)
+     * Get a form by its endpoint slug (only for the owner)
      */
     async getFormByEndpointSlug(req: Request, res: Response): Promise<void> {
         try {
@@ -241,9 +241,19 @@ export class FormController {
                 return;
             }
 
+            // [weeblr] Owner only: any other signed-in user gets the same 404 as for a missing form
+            const userId = (req as any).user?.id;
+            if (!userId) {
+                res.status(401).json({
+                    success: false,
+                    message: 'Authentication required',
+                });
+                return;
+            }
+
             const form = await this.formService.getByEndpointSlug(endpointSlug);
 
-            if (!form) {
+            if (!form || form.userId !== userId) {
                 res.status(404).json({
                     success: false,
                     message: 'Form not found or inactive',
@@ -262,7 +272,7 @@ export class FormController {
                 },
             });
         } catch (error) {
-            // [weeblr] Public route: the detail is logged, not returned
+            // [weeblr] The detail is logged, not returned
             console.error('Failed to retrieve form:', error);
             res.status(500).json({
                 success: false,

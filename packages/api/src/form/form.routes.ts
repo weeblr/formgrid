@@ -20,11 +20,9 @@ export function createFormRoutes(formController?: FormController): Router {
     const generateEndpointSlug = controller.generateEndpointSlug.bind(controller);
     const getFormStatistics = controller.getFormStatistics.bind(controller);
 
-    // Public routes (no authentication required)
-    // [weeblr] Signed-in only: forms are not hosted here, only submissions received
-    router.get('/slug/:endpointSlug', authMiddleware, getFormByEndpointSlug);
-
     // Protected routes (authentication required)
+    // [weeblr] Lookup by slug is signed-in and owner only: forms are not hosted here, only submissions received
+    router.get('/slug/:endpointSlug', authMiddleware, getFormByEndpointSlug);
     router.get('/', authMiddleware, getAllForms);
     router.post('/', authMiddleware, createForm);
     router.post('/generate-slug', authMiddleware, generateEndpointSlug);

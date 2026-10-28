@@ -84,12 +84,13 @@ Each change is tagged `[weeblr]` in a comment, so it can be found with a search 
 `packages/api/src/form/form.controller.ts`
 
 - Request body not logged: the settings hold the Jev API key: `packages/api/src/form/form.controller.ts:93`
-- No settings: they hold notification addresses, the honeypot field name and the Jev API key: `packages/api/src/form/form.controller.ts:261`
-- Public route: the detail is logged, not returned: `packages/api/src/form/form.controller.ts:265`
+- Owner only: any other signed-in user gets the same 404 as for a missing form: `packages/api/src/form/form.controller.ts:244`
+- No settings: they hold notification addresses, the honeypot field name and the Jev API key: `packages/api/src/form/form.controller.ts:271`
+- The detail is logged, not returned: `packages/api/src/form/form.controller.ts:275`
 
 `packages/api/src/form/form.routes.ts`
 
-- Signed-in only: forms are not hosted here, only submissions received: `packages/api/src/form/form.routes.ts:24`
+- Lookup by slug is signed-in and owner only: forms are not hosted here, only submissions received: `packages/api/src/form/form.routes.ts:24`
 
 `packages/api/src/form/form.validation.ts`
 
@@ -180,9 +181,14 @@ Each change is tagged `[weeblr]` in a comment, so it can be found with a search 
 - Multiple submissions allowed by default: `packages/api/src/submission/submission.validation.ts:29`
 - Language, timezone and auto-reply settings: `packages/api/src/submission/submission.validation.ts:31`
 - Per-form honeypot field name: `packages/api/src/submission/submission.validation.ts:44`
+
 `packages/api/src/user/user.routes.ts`
 
 - Signed-in only: `packages/api/src/user/user.routes.ts:26`
+
+`packages/api/tests/e2e/forms.e2e.test.ts`
+
+- Signed-in owner only: `packages/api/tests/e2e/forms.e2e.test.ts:223`
 
 ### Dashboard
 
