@@ -59,11 +59,6 @@ x-frontend-build: &frontend-build
     COPY <<'EOF' /etc/nginx/templates/default.conf.template
     map_hash_bucket_size 256;
 
-    map $$http_wbl_origin_auth $$wbl_origin_ok {
-        default 0;
-        "$${WBL_ORIGIN_AUTH}" 1;
-    }
-
     map "$${WBL_ENABLE_ACCOUNTS}" $$wbl_accounts_enabled {
         default 0;
         "true" 1;
@@ -87,7 +82,7 @@ x-frontend-build: &frontend-build
         client_max_body_size 12m;
         server_tokens off;
 
-        if ($$wbl_origin_ok = 0) {
+        if ($$http_wbl_origin_auth != "$${WBL_ORIGIN_AUTH}") {
             return 403;
         }
 

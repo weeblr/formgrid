@@ -217,6 +217,12 @@ export class SubmissionController {
                         success: false,
                         message: errorMessage,
                     });
+                } else if (errorMessage === 'Multiple submissions not allowed') {
+                    // [weeblr] Already submitted from this IP: said plainly instead of the generic failure
+                    res.status(409).json({
+                        success: false,
+                        message: errorMessage,
+                    });
                 } else if (errorMessage.includes('required') || errorMessage.includes('must be')) {
                     res.status(400).json({
                         success: false,
