@@ -70,8 +70,7 @@ if (storageConfig.type === 'local') {
 
 // Lazy load cloud storage clients to avoid import errors when not used
 let s3Client: any = null;
-let gcsClient: any = null;
-let minioClient: any = null;
+let gcsClient: any = null; // [weeblr] No MinIO client
 
 // Initialize cloud storage clients
 const initializeCloudClients = async () => {
@@ -105,24 +104,7 @@ const initializeCloudClients = async () => {
                 console.warn('Google Cloud Storage SDK not installed, GCS storage will not work');
             }
             break;
-
-        case 'minio':
-            if (storageConfig.endpoint && storageConfig.accessKey && storageConfig.secretKey) {
-                try {
-                    const { Client } = await import('minio');
-                    const url = new URL(storageConfig.endpoint);
-                    minioClient = new Client({
-                        endPoint: url.hostname,
-                        port: parseInt(url.port) || 9000,
-                        useSSL: url.protocol === 'https:',
-                        accessKey: storageConfig.accessKey,
-                        secretKey: storageConfig.secretKey,
-                    });
-                } catch (error) {
-                    console.warn('MinIO SDK not installed, MinIO storage will not work');
-                }
-            }
-            break;
+        // [weeblr] No MinIO
     }
 };
 
@@ -165,23 +147,7 @@ const uploadToCloud = async (file: Express.Multer.File): Promise<string> => {
             await fileUpload.makePublic();
             return filename;
 
-        case 'minio':
-            if (!minioClient || !storageConfig.bucketName) {
-                throw new Error('MinIO client not initialized');
-            }
-
-            await minioClient.putObject(
-                storageConfig.bucketName,
-                `uploads/${filename}`,
-                file.buffer,
-                file.buffer.length,
-                {
-                    'Content-Type': file.mimetype,
-                }
-            );
-
-            return filename;
-
+        // [weeblr] No MinIO
         default:
             throw new Error(`Unsupported storage type: ${storageConfig.type}`);
     }
@@ -198,7 +164,7 @@ export const handleFileUpload = (req: Request, res: any, next: any) => {
         if (storageConfig.type !== 'local' && req.files && Array.isArray(req.files)) {
             try {
                 // Initialize cloud clients if not already done
-                if (!s3Client && !gcsClient && !minioClient) {
+                if (!s3Client && !gcsClient) { // [weeblr] No MinIO client
                     await initializeCloudClients();
                 }
 
@@ -249,12 +215,7 @@ export const deleteFile = async (filename: string): Promise<void> => {
             }
             break;
 
-        case 'minio':
-            if (minioClient && storageConfig.bucketName) {
-                await minioClient.removeObject(storageConfig.bucketName, `uploads/${filename}`);
-            }
-            break;
-
+        // [weeblr] No MinIO
         case 'local':
         default:
             // Local file deletion

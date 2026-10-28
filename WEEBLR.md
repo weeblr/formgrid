@@ -39,15 +39,13 @@ The compose file uses `mysql:8.4`. On its first start on a volume created by 8.0
 
 Everything that is deployed (API, queue worker, dashboard) is on versions with no known advisory, checked with `pnpm audit --prod`. JSON files cannot carry a `[weeblr]` tag, so these changes to upstream manifests are listed here; after an upstream merge, keep the higher version of each.
 
-- `packages/api/package.json`: `@aws-sdk/client-s3` ^3.1158.0, `@google-cloud/storage` ^8.4.0, `@prisma/client` and `prisma` ^6.19.3, `axios` ^1.21.0, `express` ^5.3.0, `jsonwebtoken` ^9.0.3, `minio` ^8.0.7, `multer` ^2.5.0, `nodemailer` ^10.2.1 (with `@types/nodemailer` ^8.0.2), `zod` ^4.6.7.
+- `packages/api/package.json`: `@aws-sdk/client-s3` ^3.1158.0, `@google-cloud/storage` ^8.4.0, `@prisma/client` and `prisma` ^6.19.3, `axios` ^1.21.0, `express` ^5.3.0, `jsonwebtoken` ^9.0.3, `multer` ^2.5.0, `nodemailer` ^10.2.1 (with `@types/nodemailer` ^8.0.2), `zod` ^4.6.7.
 - `apps/dashboard/package.json`: `@hookform/resolvers` ^5.9.2, `axios` ^1.21.0, `react-hook-form` ^7.91.0, `react-router-dom` ^7.18.5, `react-syntax-highlighter` ^16.1.2, `zod` ^4.6.7.
 - `package.json` (root), `pnpm.overrides`: `@prisma/config>deepmerge-ts` ^8.0.2 and `bull>uuid` ^11.1.1, whose parents pin vulnerable versions.
 - `pnpm-lock.yaml`: refreshed, so indirect dependencies are at their latest version within range.
+- MinIO is removed: the project is abandoned, and it will not be used if uploads are ever turned on. The `minio` dependency, the `setup:minio` script and `packages/api/src/scripts/setup-minio.ts` are gone, and the MinIO branches of the storage code are removed (tagged below). Upstream's own compose files, docs, CLI and unused `packages/api/package-lock.json` still mention it; none of them is used by this deployment.
 
-Still reported, and left as they are:
-
-- `minio` pulls in vulnerable `stream-json` and `decode-uri-component`, and its latest release has no fix. Only `packages/api/src/scripts/setup-minio.ts` imports `minio`, and nothing in the deployment runs it. Forcing newer major versions under it could break it, so they are not overridden.
-- `next` and `postcss` in `examples/`, which is not deployed.
+Still reported, and left as they are: `next` and `postcss` in `examples/`, which is not deployed.
 
 Prisma stays on 6: Prisma 7 is a migration of its own (driver adapters, new generator). The newer Express and Nodemailer type definitions add type errors to the API build (route params typed `string | string[]`, a renamed `nodemailer` namespace). They are type-only: the API build already logs upstream's type errors without failing, and the compiled code is unchanged.
 
@@ -105,6 +103,12 @@ Each change is tagged `[weeblr]` in a comment, so it can be found with a search 
 
 - No query details in error messages: `packages/api/src/config/prisma.ts:13`
 
+`packages/api/src/config/storage.ts`
+
+- No MinIO: the project is abandoned: `packages/api/src/config/storage.ts:3`
+- No MinIO: FILE_STORAGE_TYPE=minio falls back to local storage: `packages/api/src/config/storage.ts:35`
+- No MinIO: `packages/api/src/config/storage.ts:50`
+
 `packages/api/src/form/form.controller.ts`
 
 - Request body not logged: the settings hold the Jev API key: `packages/api/src/form/form.controller.ts:93`
@@ -123,6 +127,14 @@ Each change is tagged `[weeblr]` in a comment, so it can be found with a search 
 - Multiple submissions allowed by default: `packages/api/src/form/form.validation.ts:13`
 - Language, timezone and auto-reply settings: `packages/api/src/form/form.validation.ts:15`
 - Per-form honeypot field name: `packages/api/src/form/form.validation.ts:26`
+
+`packages/api/src/middleware/fileUpload.ts`
+
+- No MinIO client: `packages/api/src/middleware/fileUpload.ts:73`
+- No MinIO: `packages/api/src/middleware/fileUpload.ts:107`
+- No MinIO: `packages/api/src/middleware/fileUpload.ts:150`
+- No MinIO client: `packages/api/src/middleware/fileUpload.ts:167`
+- No MinIO: `packages/api/src/middleware/fileUpload.ts:218`
 
 `packages/api/src/presentation/middleware/auth.ts`
 

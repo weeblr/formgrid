@@ -1,6 +1,6 @@
 // Storage configuration for multiple storage options
 export interface StorageConfig {
-    type: 'local' | 's3' | 'gcs' | 'minio';
+    type: 'local' | 's3' | 'gcs'; // [weeblr] No MinIO: the project is abandoned
     uploadPath?: string;
     bucketName?: string;
     region?: string;
@@ -32,16 +32,7 @@ export const getStorageConfig = (): StorageConfig => {
                 baseUrl: `https://storage.googleapis.com/${process.env.GCS_BUCKET_NAME}`
             };
 
-        case 'minio':
-            return {
-                type: 'minio',
-                bucketName: process.env.MINIO_BUCKET_NAME || 'file-uploads',
-                endpoint: process.env.MINIO_ENDPOINT || 'http://localhost:9000',
-                accessKey: process.env.MINIO_ACCESS_KEY || 'minioadmin',
-                secretKey: process.env.MINIO_SECRET_KEY || 'minioadmin',
-                baseUrl: `${process.env.MINIO_ENDPOINT}/${process.env.MINIO_BUCKET_NAME}`
-            };
-
+        // [weeblr] No MinIO: FILE_STORAGE_TYPE=minio falls back to local storage
         case 'local':
         default:
             return {
@@ -56,8 +47,7 @@ export const getStorageConfig = (): StorageConfig => {
 export const getFileUrl = (filename: string, storageConfig: StorageConfig): string => {
     switch (storageConfig.type) {
         case 's3':
-        case 'gcs':
-        case 'minio':
+        case 'gcs': // [weeblr] No MinIO
             return `${storageConfig.baseUrl}/uploads/${filename}`;
         case 'local':
         default:
