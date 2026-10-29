@@ -18,7 +18,7 @@ export const fr: Messages = {
     'error.required_field': 'Le champ « {field} » est obligatoire.',
     'error.generic': 'Une erreur s’est produite lors de l’envoi de votre formulaire. Veuillez réessayer.',
 
-    'email.notification.subject': 'Nouvelle réponse au formulaire {form}',
+    'email.notification.subject': '{form}: Nouvelle réponse',
     'email.notification.heading': 'Nouvelle réponse',
     'email.notification.intro': 'Une nouvelle réponse a été reçue pour le formulaire {form}.',
     'email.notification.data_heading': 'Données envoyées',

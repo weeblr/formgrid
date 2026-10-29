@@ -71,7 +71,10 @@ const formatValue = (value: unknown, language: string): string => {
     return toText(value);
 };
 
-const layout = (language: string, accent: Accent, heading: string, body: string, footer: string): string => `<!DOCTYPE html>
+/**
+ * Email page around the body. Notes are extra dimmed lines below the footer.
+ */
+const layout = (language: string, accent: Accent, heading: string, body: string, footer: string, notes: string[] = []): string => `<!DOCTYPE html>
 <html lang="${escapeHtml(language)}">
 <head>
     <meta charset="utf-8">
@@ -82,6 +85,7 @@ const layout = (language: string, accent: Accent, heading: string, body: string,
         <h1 style="font-size: 20px; margin: 0 0 16px; padding-bottom: 8px; border-bottom: 2px solid ${accent.color};">${escapeHtml(heading)}</h1>
         ${body}
         <p style="margin: 24px 0 0; padding-top: 12px; border-top: 1px solid #e5e7eb; font-size: 12px; color: #6b7280;">${escapeHtml(footer)}</p>
+        ${notes.map((note) => `<p style="margin: 4px 0 0; font-size: 12px; color: #6b7280;">${escapeHtml(note)}</p>`).join('')}
     </div>
 </body>
 </html>`;
@@ -220,15 +224,15 @@ export const sendAutoReplyEmail = async (mailer: MailerService, to: string, { da
     }
     const language = getFormLanguage(settings);
     const accent = ACCENTS.confirmation;
-    const submittedAt = formatFormDate(createdAt, settings);
+    const submittedAt = formatFormDate(createdAt, settings, false);
     const replyTo = getConfirmationReplyTo(settings);
     const footer = replyTo ? t(language, 'email.footer.reply_to', { email: replyTo }) : t(language, 'email.footer.automated');
+    const reference = labelled(language, t(language, 'email.label.submission_id'), data.submissionId);
 
     const body = `
         ${intro(accent, t(language, 'email.autoreply.intro', { form: data.formName }))}
         <table style="border-collapse: collapse; font-size: 13px;">
             ${detailRow(t(language, 'email.label.submitted_at'), submittedAt)}
-            ${detailRow(t(language, 'email.label.submission_id'), data.submissionId)}
         </table>`;
 
     const text = [
@@ -236,15 +240,15 @@ export const sendAutoReplyEmail = async (mailer: MailerService, to: string, { da
         '',
         t(language, 'email.autoreply.intro', { form: data.formName }),
         `${t(language, 'email.label.submitted_at')}: ${submittedAt}`,
-        `${t(language, 'email.label.submission_id')}: ${data.submissionId}`,
         '',
         footer,
+        reference,
     ].join('\n');
 
     return mailer.sendEmail({
         to,
         subject: t(language, 'email.autoreply.subject', { form: data.formName }),
-        html: layout(language, accent, t(language, 'email.autoreply.heading'), body, footer),
+        html: layout(language, accent, t(language, 'email.autoreply.heading'), body, footer, [reference]),
         text,
         replyTo: replyTo || getNoReplyAddress(),
     });

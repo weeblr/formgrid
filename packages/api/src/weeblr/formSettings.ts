@@ -57,9 +57,9 @@ export const getConfirmationReplyTo = (settings: unknown): string => {
 };
 
 /**
- * Date and time in the form's language and timezone, with the zone shown.
+ * Date and time in the form's language and timezone, with the zone shown unless showZone is false.
  */
-export const formatFormDate = (date: Date | string, settings: unknown): string =>
+export const formatFormDate = (date: Date | string, settings: unknown, showZone = true): string =>
     new Intl.DateTimeFormat(getLocale(getFormLanguage(settings)), {
         year: 'numeric',
         month: 'long',
@@ -67,5 +67,5 @@ export const formatFormDate = (date: Date | string, settings: unknown): string =
         hour: '2-digit',
         minute: '2-digit',
         timeZone: getFormTimezone(settings),
-        timeZoneName: 'short',
+        ...(showZone && { timeZoneName: 'short' as const }),
     }).format(new Date(date));

@@ -17,7 +17,7 @@ export const en = {
     'error.required_field': 'The field "{field}" is required.',
     'error.generic': 'There was an error submitting your form. Please try again.',
 
-    'email.notification.subject': 'New submission for {form}',
+    'email.notification.subject': '{form}: New submission',
     'email.notification.heading': 'New submission',
     'email.notification.intro': 'A new submission was received for {form}.',
     'email.notification.data_heading': 'Submitted data',
